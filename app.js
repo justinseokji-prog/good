@@ -54,29 +54,64 @@ function getGrid() {
 }
 
 // ── 날짜/시간 유틸 ──
-function getBaseDateTime() {
-  const now = new Date(Date.now() - 40 * 60000);
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  const h = String(now.getHours()).padStart(2, '0');
-  return { base_date: `${y}${m}${d}`, base_time: `${h}00` };
+function getLatestForecastTime() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  // 기상청 단기예보 발표 시각: 02, 05, 08, 11, 14, 17, 20, 23시
+  const forecastTimes = ['0200', '0500', '0800', '1100', '1400', '1700', '2000', '2300'];
+  let latestTime = '2300';
+  let baseDate = now;
+  for (let i = 0; i < forecastTimes.length; i++) {
+    const forecastHour = parseInt(forecastTimes[i].substring(0, 2));
+    if (currentHour >= forecastHour) {
+      latestTime = forecastTimes[i];
+    } else {
+      break;
+    }
+  }
+  // 현재 시간이 02시 이전이면 전날 23시 예보 사용
+  if (currentHour < 2) {
+    baseDate.setDate(baseDate.getDate() - 1);
+    latestTime = '2300';
+  }
+  const baseDateStr = baseDate.getFullYear().toString() +
+    (baseDate.getMonth() + 1).toString().padStart(2, '0') +
+    baseDate.getDate().toString().padStart(2, '0');
+  return { base_date: baseDateStr, base_time: latestTime };
 }
 
-// ── 기상청 초단기실황 API ──
+// ── 기상청 단기예보 API ──
 async function fetchKMA(nx, ny) {
   if (!KMA_API_KEY || KMA_API_KEY.includes('여기에')) return null;
   try {
-    const { base_date, base_time } = getBaseDateTime();
-    const key = encodeURIComponent(KMA_API_KEY);
-    const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${key}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+    const { base_date, base_time } = getLatestForecastTime();
+    const key = encodeURIComponent(KMA_API_KEY.trim());
+    const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${key}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
     const res = await fetch(url);
     const json = await res.json();
     const items = json?.response?.body?.items?.item;
     if (!items) return null;
+
     const map = {};
-    items.forEach(i => { map[i.category] = parseFloat(i.obsrValue); });
-    return { temp: map.T1H || 0, rain: map.RN1 || 0, wind: map.WSD || 0, humidity: map.REH || 50 };
+    const now = new Date();
+    const curHourStr = String(now.getHours()).padStart(2, '0') + '00';
+    const curDateStr = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0');
+
+    // 현재 시간에 가장 가까운 예보값 추출
+    items.forEach(i => {
+      // 해당 시간이 매칭되거나, 아직 해당 카테고리 값이 없을 경우 저장 (최우선: 현재 시간)
+      if (i.fcstDate === curDateStr && i.fcstTime === curHourStr) {
+        let val = parseFloat(i.fcstValue);
+        if (isNaN(val)) val = 0; // '강수없음' 등의 문자열 처리
+        map[i.category] = val;
+      } else if (!map[i.category]) {
+        let val = parseFloat(i.fcstValue);
+        if (isNaN(val)) val = 0;
+        map[i.category] = val;
+      }
+    });
+
+    return { temp: map.TMP || 0, rain: map.PCP || 0, wind: map.WSD || 0, humidity: map.REH || 50 };
   } catch (e) { console.warn('기상청 API 오류:', e); return null; }
 }
 
@@ -84,7 +119,8 @@ async function fetchKMA(nx, ny) {
 async function fetchAir(stationName) {
   if (!AIR_API_KEY || AIR_API_KEY.includes('여기에')) return null;
   try {
-    const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIR_API_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName=${encodeURIComponent(stationName)}&dataTerm=DAILY&ver=1.0`;
+    const key = encodeURIComponent(AIR_API_KEY.trim());
+    const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${key}&returnType=json&numOfRows=1&pageNo=1&stationName=${encodeURIComponent(stationName)}&dataTerm=DAILY&ver=1.0`;
     const res = await fetch(url);
     const json = await res.json();
     const item = json?.response?.body?.items?.[0];
