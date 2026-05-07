@@ -6,7 +6,7 @@ const AIR_API_KEY = "9f84be7b8da01571f296c24da19af99137e883b3a55546affe686c7b992
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10분
-const history = { wind: [0,0,0,0,0,0,0,0], rain: [0,0,0,0,0,0,0,0], labels: ['02:00', '05:00', '08:00', '11:00', '14:00', '17:00', '20:00', '23:00'] };
+const history = { wind: [0, 0, 0, 0, 0, 0, 0, 0], rain: [0, 0, 0, 0, 0, 0, 0, 0], labels: ['02:00', '05:00', '08:00', '11:00', '14:00', '17:00', '20:00', '23:00'] };
 let countdown = REFRESH_INTERVAL / 1000;
 let countdownTimer = null;
 let refreshTimer = null;
@@ -65,9 +65,9 @@ function getLatestForecastTime() {
 
 function getWindDir(vec) {
   if (isNaN(vec)) return '-';
-  const d = Math.floor((vec + 22.5 * 0.5) / 22.5);
-  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW','N'];
-  return dirs[d % 16];
+  // 풍향(vec) 0도: 북풍 (북->남)
+  // 위쪽 화살표(↑)를 vec + 180도 회전시켜 바람이 향하는 방향 표시
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; transform:rotate(${vec + 180}deg); margin-right:2px;"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>`;
 }
 function getWindStrength(wsd) {
   if (wsd >= 10) return '강';
@@ -162,7 +162,7 @@ async function fetchData() {
       sky: kma.rain > 0 ? '비' : kma.humidity > 80 ? '흐림' : '맑음',
       special: '없음',
       time: new Date().toLocaleString('ko-KR', { hour12: false }),
-      source: '단기예보 + 대기질',
+      source: '갱신시간 02, 05, 08, 11, 14, 17, 20, 23시',
       forecast: kma.forecast
     };
   }
@@ -298,12 +298,12 @@ function updateUI(d) {
   if (d.forecast) {
     const nowDt = new Date();
     const datesArr = [];
-    for(let i=0; i<3; i++) {
+    for (let i = 0; i < 3; i++) {
       const dt = new Date(nowDt);
       dt.setDate(nowDt.getDate() + i);
       datesArr.push({
-        dateStr: dt.getFullYear().toString() + (dt.getMonth()+1).toString().padStart(2,'0') + dt.getDate().toString().padStart(2,'0'),
-        label: `${(dt.getMonth()+1).toString().padStart(2,'0')}월 ${dt.getDate().toString().padStart(2,'0')}일`
+        dateStr: dt.getFullYear().toString() + (dt.getMonth() + 1).toString().padStart(2, '0') + dt.getDate().toString().padStart(2, '0'),
+        label: `${(dt.getMonth() + 1).toString().padStart(2, '0')}월 ${dt.getDate().toString().padStart(2, '0')}일`
       });
     }
 
@@ -311,33 +311,33 @@ function updateUI(d) {
     let windHTML = '';
     const targetTimes = ['0700', '1300'];
     const timeLabels = ['오전', '오후'];
-    
+
     // 차트 데이터 (오늘 기준 8회)
     const todayStr = datesArr[0].dateStr;
     const todayFcst = d.forecast[todayStr] || {};
     const chartTimes = ['0200', '0500', '0800', '1100', '1400', '1700', '2000', '2300'];
-    for (let i=0; i<8; i++) {
-       const ft = todayFcst[chartTimes[i]];
-       history.wind[i] = ft ? parseFloat(ft.WSD) || 0 : 0;
-       history.rain[i] = ft ? parseFloat(ft.PCP) || 0 : 0;
+    for (let i = 0; i < 8; i++) {
+      const ft = todayFcst[chartTimes[i]];
+      history.wind[i] = ft ? parseFloat(ft.WSD) || 0 : 0;
+      history.rain[i] = ft ? parseFloat(ft.PCP) || 0 : 0;
     }
 
-    for (let i=0; i<3; i++) {
+    for (let i = 0; i < 3; i++) {
       const fcstDay = d.forecast[datesArr[i].dateStr] || {};
-      for (let j=0; j<2; j++) {
+      for (let j = 0; j < 2; j++) {
         const ft = fcstDay[targetTimes[j]] || {};
         const pop = ft.POP || '-';
         const wsd = parseFloat(ft.WSD) || 0;
         const vec = parseFloat(ft.VEC) || 0;
         const sky = ft.SKY || 1;
         const pty = ft.PTY || 0;
-        
+
         const wDir = getWindDir(vec);
         const wStr = getWindStrength(wsd);
         const icon = getWeatherIcon(sky, pty);
 
-        forecastHTML += `<tr><td>${j===0 ? datesArr[i].label : ''}</td><td>${timeLabels[j]}</td><td>${icon}</td><td>${pop}%</td><td>${wsd.toFixed(1)}m/s (${wDir}) ${wStr}</td></tr>`;
-        
+        forecastHTML += `<tr><td>${j === 0 ? datesArr[i].label : ''}</td><td>${timeLabels[j]}</td><td>${icon}</td><td>${pop}%</td><td>${wDir} ${wsd.toFixed(1)}m/s ${wStr}</td></tr>`;
+
         if (i === 0) {
           const gust = (wsd * 1.5).toFixed(1);
           const pmRemark = (d.pm25 >= 75 || d.pm10 >= 150) ? '미세먼지 나쁨' : '-';
@@ -345,8 +345,8 @@ function updateUI(d) {
         }
       }
     }
-    if($('forecastBody')) $('forecastBody').innerHTML = forecastHTML;
-    if($('windBody')) $('windBody').innerHTML = windHTML;
+    if ($('forecastBody')) $('forecastBody').innerHTML = forecastHTML;
+    if ($('windBody')) $('windBody').innerHTML = windHTML;
   }
   renderChart();
 }
@@ -365,9 +365,9 @@ function toggleTheme() {
   const isLight = root.classList.contains('light-mode');
   $('themeBtn').textContent = isLight ? '🌙' : '☀️';
   if (historyChart) {
-     historyChart.options.scales.x.grid.color = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
-     historyChart.options.scales.y.grid.color = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
-     historyChart.update();
+    historyChart.options.scales.x.grid.color = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    historyChart.options.scales.y.grid.color = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+    historyChart.update();
   }
 }
 function setMode(portrait) {
@@ -386,10 +386,12 @@ function setCaptureMode(on) {
 
 // ── 캡처/공유 ──
 async function captureScreen() {
-  const target = $('screenShotArea');
-  const canvas = await html2canvas(target, { backgroundColor: '#0f1117', scale: 2 });
+  const target = $('forecastSectionToCapture') || $('screenShotArea');
+  const isLight = document.documentElement.classList.contains('light-mode');
+  const bgColor = isLight ? '#ffffff' : '#0f1117';
+  const canvas = await html2canvas(target, { backgroundColor: bgColor, scale: 2 });
   const url = canvas.toDataURL('image/png');
-  const a = document.createElement('a'); a.href = url; a.download = 'construction-weather-monitor.png'; a.click();
+  const a = document.createElement('a'); a.href = url; a.download = 'forecast-screenshot.png'; a.click();
 }
 async function shareApp() {
   const title = 'Nice Weather';
@@ -416,14 +418,14 @@ document.addEventListener('DOMContentLoaded', () => {
   $('portraitBtn').addEventListener('click', () => setMode(true));
   $('landscapeBtn').addEventListener('click', () => setMode(false));
   $('viewMode').addEventListener('change', e => setMode(e.target.value === 'portrait'));
-  
-  if($('themeBtn')) $('themeBtn').addEventListener('click', toggleTheme);
-  if($('screenshotBtn')) $('screenshotBtn').addEventListener('click', captureScreen);
+
+  if ($('themeBtn')) $('themeBtn').addEventListener('click', toggleTheme);
+  if ($('screenshotBtn')) $('screenshotBtn').addEventListener('click', captureScreen);
   $('captureBtn').addEventListener('click', () => setCaptureMode(!state.captureOnly));
   $('captureBtn2').addEventListener('click', () => setCaptureMode(!state.captureOnly));
   $('shareBtn').addEventListener('click', shareApp);
   $('shareBtn2').addEventListener('click', shareApp);
-  if($('toggleRulesBtn')) $('toggleRulesBtn').addEventListener('click', () => {
+  if ($('toggleRulesBtn')) $('toggleRulesBtn').addEventListener('click', () => {
     const c = $('rulesTableContainer');
     c.classList.toggle('hidden');
   });
