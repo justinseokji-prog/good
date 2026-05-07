@@ -1,7 +1,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ▼▼▼ 여기에 API 키를 입력하세요 ▼▼▼
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const KMA_API_KEY = "Pw5FUWR4RraORVFkeLa2Sw";
+const KMA_API_KEY = "a50769958abbb8124ed0f48bdd5cb0841bbf509a1a2a5d741f8e35e56dc5f7c1";
 const AIR_API_KEY = "9f84be7b8da01571f296c24da19af99137e883b3a55546affe686c7b992ae819";
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
