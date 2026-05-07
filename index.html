@@ -115,6 +115,23 @@ img,svg{display:block;max-width:100%}
 .capture-only .app-shell{background:#000}
 .capture-only .capture-stage{padding:0}
 .capture-only .device{border:none;box-shadow:none}
+:root.light-mode {
+  --bg:#f6f8fa; --surface:#ffffff; --surface-2:#f3f4f6; --surface-3:#e5e7eb;
+  --border:#d0d7de; --text:#1f2328; --muted:#656d76; --faint:#8c959f;
+  --shadow:0 14px 40px rgba(0,0,0,.1);
+}
+.light-mode .app-shell { background:radial-gradient(circle at top left,rgba(61,139,205,.08),transparent 36%),radial-gradient(circle at bottom right,rgba(63,185,80,.05),transparent 28%),var(--bg); }
+.light-mode .topbar { background:rgba(255,255,255,.92); }
+.light-mode .device-screen { background:radial-gradient(circle at top left,rgba(61,139,205,.08),transparent 28%),var(--bg); }
+.light-mode .status-banner { background:rgba(255,255,255,.88); }
+.light-mode .kpi { background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(246,248,250,.98)); }
+.light-mode .section-card { background:rgba(255,255,255,.92); }
+.light-mode .data-row { background:rgba(0,0,0,.02); border-color:rgba(0,0,0,.04); }
+.light-mode .rule-table th { background:rgba(0,0,0,.02); }
+.light-mode .rule-table tr:hover td { background:rgba(0,0,0,.02); }
+.light-mode .progress { background:#e5e7eb; }
+.light-mode .eye-btn { background:rgba(0,0,0,.03); border-color:var(--border); color:var(--text); }
+.light-mode .eye-btn:hover { background:rgba(0,0,0,.06); border-color:rgba(0,0,0,.1); }
 </style>
 </head>
 <body>
@@ -130,9 +147,10 @@ img,svg{display:block;max-width:100%}
       </div>
     </div>
     <div class="toolbar">
-      <button class="tool-btn capture" id="captureBtn" type="button">캡처</button>
+      <button class="tool-btn" id="themeBtn" type="button">☀️</button>
+      <button class="tool-btn primary" id="screenshotBtn" type="button">스크린샷</button>
+      <button class="tool-btn capture" id="captureBtn" type="button">캡처모드</button>
       <button class="tool-btn share" id="shareBtn" type="button">공유</button>
-      <button class="tool-btn primary" id="fullscreenBtn" type="button">앱만</button>
     </div>
   </div>
 
@@ -148,10 +166,7 @@ img,svg{display:block;max-width:100%}
     <button class="tool-btn" id="landscapeBtn" type="button">가로</button>
   </div>
 
-  <div class="notice">
-    <div class="badge blue">안내</div>
-    <div><strong>캡처 모드</strong>앱 화면만 깔끔하게 보이도록 상단바와 선택 영역을 숨길 수 있습니다.</div>
-  </div>
+
 
   <div class="capture-stage">
     <div class="device" id="deviceFrame">
@@ -187,17 +202,39 @@ img,svg{display:block;max-width:100%}
             </div>
           </div>
 
+          <!-- 3일간 일기예보 -->
+          <div class="section">
+            <div class="section-card">
+              <div class="section-head"><h2>단기예보 (3일간)</h2><span class="tag">오전/오후</span></div>
+              <table class="rule-table" id="forecastTable" style="text-align:center;">
+                <thead><tr><th style="text-align:center;">날짜</th><th style="text-align:center;">구분</th><th style="text-align:center;">날씨</th><th style="text-align:center;">강수확률</th><th style="text-align:center;">바람(풍향)</th></tr></thead>
+                <tbody id="forecastBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 금일 풍속 현황 -->
+          <div class="section">
+            <div class="section-card">
+              <div class="section-head"><h2>금일 풍속 현황</h2><span class="tag">오전/오후</span></div>
+              <table class="rule-table" id="windTable" style="text-align:center;">
+                <thead><tr><th style="text-align:center;">구분</th><th style="text-align:center;">순간풍속</th><th style="text-align:center;">평균풍속</th><th style="text-align:center;">비고</th></tr></thead>
+                <tbody id="windBody"></tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- 기상 이력 차트 -->
           <div class="section">
             <div class="section-card">
-              <div class="section-head"><h2>📈 기상 이력 (최근 6회)</h2><span class="tag">풍속 · 강수량</span></div>
+              <div class="section-head"><h2>📈 기상 이력 (1일 8회)</h2><span class="tag">풍속 · 강수량</span></div>
               <div class="chart-wrap"><canvas id="historyChart"></canvas></div>
             </div>
           </div>
 
           <div class="section">
             <div class="section-card">
-              <div class="section-head"><h2>실시간 기상 / 특보 / 대기</h2><span class="tag" id="stationTag">-</span></div>
+              <div class="section-head"><h2>단기예보 / 특보 / 대기</h2><span class="tag" id="stationTag">-</span></div>
               <div class="data-list">
                 <div class="data-row"><div class="data-key">관측 시각</div><div class="data-val" id="obsTime">--</div></div>
                 <div class="data-row"><div class="data-key">날씨</div><div class="data-val" id="skyText">--</div></div>
@@ -210,7 +247,8 @@ img,svg{display:block;max-width:100%}
 
           <div class="section">
             <div class="section-card">
-              <div class="section-head"><h2>공종별 작업 중지 판단</h2><span class="tag">자동 판단</span></div>
+              <div class="section-head"><h2>공종별 작업 중지 판단</h2><button class="eye-btn" id="toggleRulesBtn" type="button" style="width:24px;height:24px;font-size:12px;">👁</button></div>
+              <div id="rulesTableContainer" class="hidden">
               <table class="rule-table">
                 <thead><tr><th>공종</th><th>기준</th><th>상태</th></tr></thead>
                 <tbody>
@@ -222,6 +260,7 @@ img,svg{display:block;max-width:100%}
                   <tr><td><span class="rule-name">화재위험</span><span class="rule-sub">용접·절단</span></td><td>건조주의보</td><td id="ruleDry" class="rule-status">정상</td></tr>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
@@ -230,7 +269,7 @@ img,svg{display:block;max-width:100%}
             <button class="tool-btn capture" id="captureBtn2" type="button">캡처 모드</button>
             <button class="tool-btn share" id="shareBtn2" type="button">공유</button>
           </div>
-          <div class="bottom-note">기상청 초단기실황 API + 에어코리아 실시간 대기질 API 연동. API 키 미입력 또는 호출 실패 시 시뮬레이션 데이터로 자동 폴백됩니다. 10분 간격 자동 갱신.</div>
+          <div class="bottom-note">기상청 단기예보 API + 에어코리아 실시간 대기질 API 연동. API 키 미입력 또는 호출 실패 시 시뮬레이션 데이터로 자동 폴백됩니다. 10분 간격 자동 갱신.</div>
         </div>
       </div>
     </div>
