@@ -67,7 +67,7 @@ function getWindDir(vec) {
   if (isNaN(vec)) return '-';
   // 풍향(vec): 0도(북풍), 90도(동풍). 화살표는 바람이 불어가는 방향 표시.
   const arrowIndex = Math.floor(((vec + 180 + 22.5) % 360) / 45);
-  const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+  const arrows = ['\\u2191', '\\u2197', '\\u2192', '\\u2198', '\\u2193', '\\u2199', '\\u2190', '\\u2196'];
   return `<span style="font-size:14px; font-weight:bold; margin-right:2px;">${arrows[arrowIndex]}</span>`;
 }
 function getWindStrength(wsd) {
