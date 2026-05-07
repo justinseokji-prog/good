@@ -6,8 +6,7 @@ const AIR_API_KEY = "9f84be7b8da01571f296c24da19af99137e883b3a55546affe686c7b992
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10분
-const HISTORY_MAX = 6;
-const history = { wind: [], rain: [], labels: [] };
+const history = { wind: [0,0,0,0,0,0,0,0], rain: [0,0,0,0,0,0,0,0], labels: ['02:00', '05:00', '08:00', '11:00', '14:00', '17:00', '20:00', '23:00'] };
 let countdown = REFRESH_INTERVAL / 1000;
 let countdownTimer = null;
 let refreshTimer = null;
@@ -56,28 +55,31 @@ function getGrid() {
 // ── 날짜/시간 유틸 ──
 function getLatestForecastTime() {
   const now = new Date();
-  const currentHour = now.getHours();
-  // 기상청 단기예보 발표 시각: 02, 05, 08, 11, 14, 17, 20, 23시
-  const forecastTimes = ['0200', '0500', '0800', '1100', '1400', '1700', '2000', '2300'];
-  let latestTime = '2300';
-  let baseDate = now;
-  for (let i = 0; i < forecastTimes.length; i++) {
-    const forecastHour = parseInt(forecastTimes[i].substring(0, 2));
-    if (currentHour >= forecastHour) {
-      latestTime = forecastTimes[i];
-    } else {
-      break;
-    }
-  }
-  // 현재 시간이 02시 이전이면 전날 23시 예보 사용
-  if (currentHour < 2) {
-    baseDate.setDate(baseDate.getDate() - 1);
-    latestTime = '2300';
-  }
-  const baseDateStr = baseDate.getFullYear().toString() +
-    (baseDate.getMonth() + 1).toString().padStart(2, '0') +
-    baseDate.getDate().toString().padStart(2, '0');
-  return { base_date: baseDateStr, base_time: latestTime };
+  // 3일치 예보를 위해 전날 23시 발표 자료 사용
+  now.setDate(now.getDate() - 1);
+  const baseDateStr = now.getFullYear().toString() +
+    (now.getMonth() + 1).toString().padStart(2, '0') +
+    now.getDate().toString().padStart(2, '0');
+  return { base_date: baseDateStr, base_time: '2300' };
+}
+
+function getWindDir(vec) {
+  if (isNaN(vec)) return '-';
+  const d = Math.floor((vec + 22.5 * 0.5) / 22.5);
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW','N'];
+  return dirs[d % 16];
+}
+function getWindStrength(wsd) {
+  if (wsd >= 10) return '강';
+  if (wsd >= 4) return '중';
+  return '약';
+}
+function getWeatherIcon(sky, pty) {
+  if (pty == 1 || pty == 4) return '🌧️';
+  if (pty == 2 || pty == 3) return '🌨️';
+  if (sky == 1) return '☀️';
+  if (sky == 3) return '⛅';
+  return '☁️';
 }
 
 // ── 기상청 단기예보 API ──
@@ -93,16 +95,19 @@ async function fetchKMA(nx, ny) {
     if (!items) return null;
 
     const map = {};
+    const forecast = {};
     const now = new Date();
     const curHourStr = String(now.getHours()).padStart(2, '0') + '00';
     const curDateStr = now.getFullYear().toString() + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0');
 
-    // 현재 시간에 가장 가까운 예보값 추출
     items.forEach(i => {
-      // 해당 시간이 매칭되거나, 아직 해당 카테고리 값이 없을 경우 저장 (최우선: 현재 시간)
+      if (!forecast[i.fcstDate]) forecast[i.fcstDate] = {};
+      if (!forecast[i.fcstDate][i.fcstTime]) forecast[i.fcstDate][i.fcstTime] = {};
+      forecast[i.fcstDate][i.fcstTime][i.category] = i.fcstValue;
+
       if (i.fcstDate === curDateStr && i.fcstTime === curHourStr) {
         let val = parseFloat(i.fcstValue);
-        if (isNaN(val)) val = 0; // '강수없음' 등의 문자열 처리
+        if (isNaN(val)) val = 0;
         map[i.category] = val;
       } else if (!map[i.category]) {
         let val = parseFloat(i.fcstValue);
@@ -111,7 +116,7 @@ async function fetchKMA(nx, ny) {
       }
     });
 
-    return { temp: map.TMP || 0, rain: map.PCP || 0, wind: map.WSD || 0, humidity: map.REH || 50 };
+    return { temp: map.TMP || 0, rain: map.PCP || 0, wind: map.WSD || 0, humidity: map.REH || 50, forecast };
   } catch (e) { console.warn('기상청 API 오류:', e); return null; }
 }
 
@@ -157,14 +162,16 @@ async function fetchData() {
       sky: kma.rain > 0 ? '비' : kma.humidity > 80 ? '흐림' : '맑음',
       special: '없음',
       time: new Date().toLocaleString('ko-KR', { hour12: false }),
-      source: '실시간 API'
+      source: '단기예보 + 대기질',
+      forecast: kma.forecast
     };
   }
   if (kma) {
     const fb = randomData();
     return {
       ...fb, wind: kma.wind, rain: kma.rain, humidity: kma.humidity, temp: kma.temp,
-      sky: kma.rain > 0 ? '비' : kma.humidity > 80 ? '흐림' : '맑음', source: '기상청 API + 시뮬레이션'
+      sky: kma.rain > 0 ? '비' : kma.humidity > 80 ? '흐림' : '맑음', source: '기상청 API + 시뮬레이션',
+      forecast: kma.forecast
     };
   }
   if (air) {
@@ -175,16 +182,6 @@ async function fetchData() {
 }
 
 // ── 이력 차트 ──
-function updateHistory(d) {
-  const t = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-  history.labels.push(t);
-  history.wind.push(d.wind);
-  history.rain.push(d.rain);
-  if (history.labels.length > HISTORY_MAX) {
-    history.labels.shift(); history.wind.shift(); history.rain.shift();
-  }
-  renderChart();
-}
 function renderChart() {
   const ctx = $('historyChart');
   if (!ctx) return;
@@ -298,7 +295,60 @@ function updateUI(d) {
   $('statusTitle').textContent = danger ? '즉시 작업 중지 필요' : warn ? '주의 필요' : '작업 가능';
   $('statusDesc').textContent = danger ? '현재 조건이 공종별 작업중지 기준을 초과했습니다. 현장 판단을 우선하세요.' : warn ? '일부 항목이 주의 수준입니다. 미세먼지·건조·풍속을 함께 확인하세요.' : '현재 기상 조건이 기준 이내입니다. 일반 안전수칙을 유지하세요.';
 
-  updateHistory(d);
+  if (d.forecast) {
+    const nowDt = new Date();
+    const datesArr = [];
+    for(let i=0; i<3; i++) {
+      const dt = new Date(nowDt);
+      dt.setDate(nowDt.getDate() + i);
+      datesArr.push({
+        dateStr: dt.getFullYear().toString() + (dt.getMonth()+1).toString().padStart(2,'0') + dt.getDate().toString().padStart(2,'0'),
+        label: `${(dt.getMonth()+1).toString().padStart(2,'0')}월 ${dt.getDate().toString().padStart(2,'0')}일`
+      });
+    }
+
+    let forecastHTML = '';
+    let windHTML = '';
+    const targetTimes = ['0700', '1300'];
+    const timeLabels = ['오전', '오후'];
+    
+    // 차트 데이터 (오늘 기준 8회)
+    const todayStr = datesArr[0].dateStr;
+    const todayFcst = d.forecast[todayStr] || {};
+    const chartTimes = ['0200', '0500', '0800', '1100', '1400', '1700', '2000', '2300'];
+    for (let i=0; i<8; i++) {
+       const ft = todayFcst[chartTimes[i]];
+       history.wind[i] = ft ? parseFloat(ft.WSD) || 0 : 0;
+       history.rain[i] = ft ? parseFloat(ft.PCP) || 0 : 0;
+    }
+
+    for (let i=0; i<3; i++) {
+      const fcstDay = d.forecast[datesArr[i].dateStr] || {};
+      for (let j=0; j<2; j++) {
+        const ft = fcstDay[targetTimes[j]] || {};
+        const pop = ft.POP || '-';
+        const wsd = parseFloat(ft.WSD) || 0;
+        const vec = parseFloat(ft.VEC) || 0;
+        const sky = ft.SKY || 1;
+        const pty = ft.PTY || 0;
+        
+        const wDir = getWindDir(vec);
+        const wStr = getWindStrength(wsd);
+        const icon = getWeatherIcon(sky, pty);
+
+        forecastHTML += `<tr><td>${j===0 ? datesArr[i].label : ''}</td><td>${timeLabels[j]}</td><td>${icon}</td><td>${pop}%</td><td>${wsd.toFixed(1)}m/s (${wDir}) ${wStr}</td></tr>`;
+        
+        if (i === 0) {
+          const gust = (wsd * 1.5).toFixed(1);
+          const pmRemark = (d.pm25 >= 75 || d.pm10 >= 150) ? '미세먼지 나쁨' : '-';
+          windHTML += `<tr><td>${timeLabels[j]}</td><td>${gust}m/s</td><td>${wsd.toFixed(1)}m/s</td><td>${pmRemark}</td></tr>`;
+        }
+      }
+    }
+    if($('forecastBody')) $('forecastBody').innerHTML = forecastHTML;
+    if($('windBody')) $('windBody').innerHTML = windHTML;
+  }
+  renderChart();
 }
 
 // ── 메인 갱신 ──
@@ -309,6 +359,17 @@ async function refresh() {
 }
 
 // ── 모드 전환 ──
+function toggleTheme() {
+  const root = document.documentElement;
+  root.classList.toggle('light-mode');
+  const isLight = root.classList.contains('light-mode');
+  $('themeBtn').textContent = isLight ? '🌙' : '☀️';
+  if (historyChart) {
+     historyChart.options.scales.x.grid.color = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+     historyChart.options.scales.y.grid.color = isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+     historyChart.update();
+  }
+}
 function setMode(portrait) {
   state.portrait = portrait;
   $('deviceFrame').classList.toggle('landscape', !portrait);
@@ -331,8 +392,8 @@ async function captureScreen() {
   const a = document.createElement('a'); a.href = url; a.download = 'construction-weather-monitor.png'; a.click();
 }
 async function shareApp() {
-  const title = '건설 기상 안전 모니터';
-  const text = '건설현장 기상·특보·미세먼지·법령 판단 앱';
+  const title = 'Nice Weather';
+  const text = '현장 기상 정보';
   const url = location.href;
   if (navigator.share) { try { await navigator.share({ title, text, url }); } catch (e) { } }
   else { await navigator.clipboard.writeText(url); alert('링크를 복사했습니다.'); }
@@ -343,17 +404,29 @@ function closeLaw() { $('lawModal').classList.remove('show'); }
 // ── 초기화 ──
 document.addEventListener('DOMContentLoaded', () => {
   populateRegion1();
+  $('region1').value = '서울특별시';
+  populateRegion2();
+  $('region2').value = '송파구';
+  populateRegion3();
+  $('region3').value = '장지동';
+
   $('region1').addEventListener('change', () => { populateRegion2(); refresh(); });
   $('region2').addEventListener('change', () => { populateRegion3(); refresh(); });
   $('region3').addEventListener('change', () => { refresh(); });
   $('portraitBtn').addEventListener('click', () => setMode(true));
   $('landscapeBtn').addEventListener('click', () => setMode(false));
   $('viewMode').addEventListener('change', e => setMode(e.target.value === 'portrait'));
-  $('fullscreenBtn').addEventListener('click', () => setCaptureMode(!state.captureOnly));
+  
+  if($('themeBtn')) $('themeBtn').addEventListener('click', toggleTheme);
+  if($('screenshotBtn')) $('screenshotBtn').addEventListener('click', captureScreen);
   $('captureBtn').addEventListener('click', () => setCaptureMode(!state.captureOnly));
   $('captureBtn2').addEventListener('click', () => setCaptureMode(!state.captureOnly));
   $('shareBtn').addEventListener('click', shareApp);
   $('shareBtn2').addEventListener('click', shareApp);
+  if($('toggleRulesBtn')) $('toggleRulesBtn').addEventListener('click', () => {
+    const c = $('rulesTableContainer');
+    c.classList.toggle('hidden');
+  });
   $('refreshBtn').addEventListener('click', () => refresh());
   $('closeModal').addEventListener('click', closeLaw);
   $('lawModal').addEventListener('click', e => { if (e.target.id === 'lawModal') closeLaw(); });
