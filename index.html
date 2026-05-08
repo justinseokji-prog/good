@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,7 +31,7 @@
             gap: 10px;
             margin-bottom: 10px;
         }
-        
+
         select {
             padding: 8px;
             font-size: 16px;
@@ -56,7 +57,8 @@
             text-align: center;
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid black;
             padding: 12px;
             font-weight: bold;
@@ -73,12 +75,18 @@
         .forecast-table th {
             background-color: #f0f0f0;
         }
+
         .forecast-table td:first-child {
             background-color: #f0f0f0;
         }
 
-        .blue-text { color: #2c7bb6; }
-        .red-text { color: #d7191c; }
+        .blue-text {
+            color: #2c7bb6;
+        }
+
+        .red-text {
+            color: #d7191c;
+        }
 
         .btn-capture {
             padding: 15px;
@@ -91,176 +99,294 @@
             cursor: pointer;
             margin-top: 20px;
         }
-        .btn-capture:hover { background-color: #2b6fa6; }
+
+        .btn-capture:hover {
+            background-color: #2b6fa6;
+        }
 
         /* Weather Icon Sizes */
-        .icon-large { font-size: 30px; }
-        
+        .icon-large {
+            font-size: 30px;
+        }
+
         /* Wind cell */
         .wind-cell {
             line-height: 1.4;
         }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <div class="dropdowns" id="dropdowns">
-        <!-- Dropdowns will be populated by regions.js data conceptually -->
-        <select id="region1"><option>서울특별시</option></select>
-        <select id="region2"><option>종로구</option></select>
-        <select id="region3"><option>사직동</option></select>
-    </div>
-
-    <!-- 오전 풍속현황 -->
-    <div>
-        <div class="title">오전 풍속현황</div>
-        <table class="wind-table">
-            <tr>
-                <td width="20%">시간</td>
-                <td width="80%" id="w-time">09시</td>
-            </tr>
-            <tr>
-                <td>순간<br>풍속</td>
-                <td id="w-max">5.8m/s</td>
-            </tr>
-            <tr>
-                <td>평균<br>풍속</td>
-                <td id="w-avg">4.0m/s</td>
-            </tr>
-            <tr>
-                <td>비고</td>
-                <td id="w-note">초미세먼지 좋음</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- 일기예보 영역 (캡처 대상) -->
-    <div id="forecast-section" style="background-color: white; padding: 10px;">
-        <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
-            <div class="title" style="margin-bottom:0; flex-shrink: 0;">일기예보</div>
-            <div id="date-labels" style="display: flex; flex: 1; font-size: 18px; font-weight: bold; justify-content: space-around; margin-left: 10%;">
-                <!-- 날짜가 여기에 들어갑니다 -->
-            </div>
+    <div class="container">
+        <div class="dropdowns" id="dropdowns">
+            <!-- Dropdowns will be populated by regions.js data conceptually -->
+            <select id="region1">
+                <option>서울특별시</option>
+            </select>
+            <select id="region2">
+                <option>종로구</option>
+            </select>
+            <select id="region3">
+                <option>사직동</option>
+            </select>
         </div>
-        
-        <table class="forecast-table">
-            <thead>
+
+        <!-- 풍속현황 -->
+        <div>
+            <div class="title">풍속현황</div>
+            <table class="wind-table">
                 <tr>
-                    <th width="10%">시각</th>
-                    <th width="15%">오전</th>
-                    <th width="15%">오후</th>
-                    <th width="15%">오전</th>
-                    <th width="15%">오후</th>
-                    <th width="15%">오전</th>
-                    <th width="15%">오후</th>
+                    <td width="20%">시간</td>
+                    <td width="80%" id="w-time">09시</td>
                 </tr>
-            </thead>
-            <tbody id="forecast-body">
-                <!-- Data will be inserted here -->
-            </tbody>
-        </table>
-        <div id="base-time" style="font-size: 14px; color: #555555; margin-top: 5px;">업데이트 기준: -</div>
+                <tr>
+                    <td>순간<br>풍속</td>
+                    <td id="w-max">5.8m/s</td>
+                </tr>
+                <tr>
+                    <td>평균<br>풍속</td>
+                    <td id="w-avg">4.0m/s</td>
+                </tr>
+                <tr>
+                    <td>비고</td>
+                    <td id="w-note">초미세먼지 좋음</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 일기예보 영역 (캡처 대상) -->
+        <div id="forecast-section" style="background-color: white; padding: 10px;">
+            <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
+                <div class="title" style="margin-bottom:0; flex-shrink: 0;">일기예보</div>
+                <div id="date-labels"
+                    style="display: flex; flex: 1; font-size: 18px; font-weight: bold; justify-content: space-around; margin-left: 10%;">
+                    <!-- 날짜가 여기에 들어갑니다 -->
+                </div>
+            </div>
+
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th width="10%">시각</th>
+                        <th width="15%">오전</th>
+                        <th width="15%">오후</th>
+                        <th width="15%">오전</th>
+                        <th width="15%">오후</th>
+                        <th width="15%">오전</th>
+                        <th width="15%">오후</th>
+                    </tr>
+                </thead>
+                <tbody id="forecast-body">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+            <div id="base-time" style="font-size: 14px; color: #555555; margin-top: 5px;">업데이트 기준: -</div>
+        </div>
+
+        <button class="btn-capture" onclick="captureForecast()">일기예보 스크린샷</button>
     </div>
 
-    <button class="btn-capture" onclick="captureForecast()">일기예보 스크린샷</button>
-</div>
+    <script src="regions.js"></script>
+    <script>
+        const KMA_API_KEY = "a50769958abbb8124ed0f48bdd5cb0841bbf509a1a2a5d741f8e35e56dc5f7c1";
+        const AIR_API_KEY = "9f84be7b8da01571f296c24da19af99137e883b3a55546affe686c7b992ae819";
 
-<script>
-    const KMA_API_KEY = "a50769958abbb8124ed0f48bdd5cb0841bbf509a1a2a5d741f8e35e56dc5f7c1";
-    const AIR_API_KEY = "9f84be7b8da01571f296c24da19af99137e883b3a55546affe686c7b992ae819";
+        function getWindStrength(wsd) {
+            if (wsd >= 10) return '강';
+            if (wsd >= 4) return '약간 강';
+            return '약';
+        }
 
-    function getWindStrength(wsd) {
-        if (wsd >= 10) return '강';
-        if (wsd >= 4) return '약간 강';
-        return '약';
-    }
-
-    function getWindDir(vec) {
-        // 나침반 모양의 SVG 화살표 (vec: 풍향 각도)
-        // 기상청 풍향(vec)은 불어오는 방향이므로, 불어가는 방향을 가리키려면 +180도
-        const angle = (vec + 180) % 360;
-        return `<svg viewBox="0 0 24 24" style="width:28px; height:28px; transform: rotate(${angle}deg); display: block; margin: 0 auto;">
+        function getWindDir(vec) {
+            // 나침반 모양의 SVG 화살표 (vec: 풍향 각도)
+            // 기상청 풍향(vec)은 불어오는 방향이므로, 불어가는 방향을 가리키려면 +180도
+            const angle = (vec + 180) % 360;
+            return `<svg viewBox="0 0 24 24" style="width:28px; height:28px; transform: rotate(${angle}deg); display: block; margin: 0 auto;">
                     <path fill="#000000" d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
                 </svg>`;
-    }
-
-    function getWeatherIcon(sky, pty) {
-        if (pty == 1 || pty == 4) return '☔';
-        if (pty == 2 || pty == 3) return '❄️';
-        if (sky == 1) return '☀️';
-        if (sky == 3) return '⛅';
-        return '☁️';
-    }
-
-    async function loadMockData() {
-        // Date Setup
-        const now = new Date();
-        const dateLabels = document.getElementById('date-labels');
-        dateLabels.innerHTML = ''; // Clear existing
-        
-        const hanjaDays = ['日', '月', '火', '水', '木', '金', '土'];
-        
-        for(let i=0; i<3; i++) {
-            const d = new Date(now);
-            d.setDate(now.getDate() + i);
-            const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${hanjaDays[d.getDay()]})`;
-            const div = document.createElement('div');
-            div.innerText = dateStr;
-            
-            // 토요일(6) 파란색, 일요일(0) 빨간색
-            if(d.getDay() === 6) div.style.color = '#2c7bb6';
-            if(d.getDay() === 0) div.style.color = '#d7191c';
-            
-            dateLabels.appendChild(div);
-        }
-        
-        document.getElementById('w-time').innerText = String(now.getHours()).padStart(2,'0') + "시";
-        
-        // Base time
-        const yest = new Date(now);
-        yest.setDate(now.getDate() - 1);
-        document.getElementById('base-time').innerText = `업데이트 기준: ${yest.getFullYear()}년 ${yest.getMonth()+1}월 ${yest.getDate()}일 23:00 발표 (오전 08:00, 오후 13:00 예보 기준)`;
-
-        // Mock Fetching Logic (You can swap with actual fetch if needed)
-        let html = "";
-        
-        // Rows: 날씨, 기온, 강수확률, 바람
-        const rows = ['날 씨', '기 온', '강수<br>확률', '바람<br>(m/s)'];
-        const mockData = [];
-        
-        for(let i=0; i<6; i++) {
-            const wsd = (Math.random() * 5 + 2).toFixed(1);
-            const vec = Math.floor(Math.random() * 360);
-            mockData.push({
-                icon: ['☀️', '⛅', '☁️', '☔'][Math.floor(Math.random()*4)],
-                temp: Math.floor(Math.random() * 15 + 10),
-                pop: [0, 0, 20, 60][Math.floor(Math.random()*4)],
-                wsd: wsd,
-                wStr: getWindStrength(wsd),
-                arrowSVG: getWindDir(vec)
-            });
         }
 
-        html += `<tr><td>${rows[0]}</td>` + mockData.map(d => `<td class="icon-large">${d.icon}</td>`).join('') + `</tr>`;
-        html += `<tr><td>${rows[1]}</td>` + mockData.map((d, i) => `<td class="${i%2===0?'blue-text':'red-text'}">${d.temp}°C</td>`).join('') + `</tr>`;
-        html += `<tr><td>${rows[2]}</td>` + mockData.map(d => `<td>${d.pop>0 ? d.pop+'%' : '-'}</td>`).join('') + `</tr>`;
-        html += `<tr><td>${rows[3]}</td>` + mockData.map(d => `<td class="wind-cell">${d.arrowSVG}<div style="margin-top:4px;">${d.wStr}<br>${d.wsd}m/s</div></td>`).join('') + `</tr>`;
+        function getWeatherIcon(sky, pty) {
+            if (pty == 1 || pty == 4) return '☔';
+            if (pty == 2 || pty == 3) return '❄️';
+            if (sky == 1) return '☀️';
+            if (sky == 3) return '⛅';
+            return '☁️';
+        }
 
-        document.getElementById('forecast-body').innerHTML = html;
-    }
+        const cbRegion1 = document.getElementById('region1');
+        const cbRegion2 = document.getElementById('region2');
+        const cbRegion3 = document.getElementById('region3');
 
-    async function captureForecast() {
-        const target = document.getElementById('forecast-section');
-        const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
-        const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'forecast_screenshot.png';
-        a.click();
-    }
+        function initRegions() {
+            cbRegion1.innerHTML = '';
+            for (let r1 in REGIONS) {
+                cbRegion1.innerHTML += `<option value="${r1}">${r1}</option>`;
+            }
+            cbRegion1.value = "서울특별시";
+            updateRegion2();
+        }
 
-    window.onload = loadMockData;
-</script>
+        function updateRegion2() {
+            const r1 = cbRegion1.value;
+            cbRegion2.innerHTML = '';
+            if (REGIONS[r1]) {
+                for (let r2 in REGIONS[r1]) {
+                    cbRegion2.innerHTML += `<option value="${r2}">${r2}</option>`;
+                }
+            }
+            cbRegion2.value = "종로구";
+            updateRegion3();
+        }
+
+        function updateRegion3() {
+            const r1 = cbRegion1.value;
+            const r2 = cbRegion2.value;
+            cbRegion3.innerHTML = '';
+            if (REGIONS[r1] && REGIONS[r1][r2]) {
+                const d_list = REGIONS[r1][r2].d || [];
+                for (let r3 of d_list) {
+                    cbRegion3.innerHTML += `<option value="${r3}">${r3}</option>`;
+                }
+            }
+            fetchData();
+        }
+
+        cbRegion1.addEventListener('change', updateRegion2);
+        cbRegion2.addEventListener('change', updateRegion3);
+        cbRegion3.addEventListener('change', fetchData);
+
+        async function fetchData() {
+            const r1 = cbRegion1.value;
+            const r2 = cbRegion2.value;
+            let nx = 60, ny = 127, st = "종로구";
+            
+            if (REGIONS[r1] && REGIONS[r1][r2]) {
+                nx = REGIONS[r1][r2].nx;
+                ny = REGIONS[r1][r2].ny;
+                st = REGIONS[r1][r2].st;
+            }
+
+            // Date Setup
+            const now = new Date();
+            const dateLabels = document.getElementById('date-labels');
+            dateLabels.innerHTML = ''; 
+
+            const hanjaDays = ['日', '月', '火', '水', '木', '金', '土'];
+            const targetDates = [];
+            
+            for (let i = 0; i < 3; i++) {
+                const d = new Date(now);
+                d.setDate(now.getDate() + i);
+                targetDates.push(d);
+                const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} (${hanjaDays[d.getDay()]})`;
+                const div = document.createElement('div');
+                div.innerText = dateStr;
+
+                if (d.getDay() === 6) div.style.color = '#2c7bb6';
+                if (d.getDay() === 0) div.style.color = '#d7191c';
+                dateLabels.appendChild(div);
+            }
+
+            // Air Quality
+            let pm25Status = "초미세먼지 보통";
+            try {
+                const airUrl = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIR_API_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName=${encodeURIComponent(st)}&dataTerm=DAILY&ver=1.0`;
+                const res = await fetch(airUrl);
+                const data = await res.json();
+                const pm25 = parseInt(data.response.body.items[0].pm25Value);
+                if (pm25 >= 75) pm25Status = "초미세먼지 매우나쁨";
+                else if (pm25 >= 35) pm25Status = "초미세먼지 나쁨";
+                else if (pm25 >= 15) pm25Status = "초미세먼지 보통";
+                else pm25Status = "초미세먼지 좋음";
+            } catch(e) { console.error("Air API Error", e); }
+
+            // Weather API
+            const yest = new Date(now);
+            yest.setDate(now.getDate() - 1);
+            const base_date = `${yest.getFullYear()}${String(yest.getMonth() + 1).padStart(2, '0')}${String(yest.getDate()).padStart(2, '0')}`;
+            const base_time = "2300";
+
+            document.getElementById('base-time').innerText = `업데이트 기준: ${yest.getFullYear()}년 ${yest.getMonth() + 1}월 ${yest.getDate()}일 23:00 발표 (오전 08:00, 오후 13:00 예보 기준)`;
+
+            let forecast = {};
+            try {
+                const kmaUrl = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${KMA_API_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+                const res = await fetch(kmaUrl);
+                const data = await res.json();
+                const items = data.response.body.items.item;
+
+                items.forEach(item => {
+                    const fDate = item.fcstDate;
+                    const fTime = item.fcstTime;
+                    if (!forecast[fDate]) forecast[fDate] = {};
+                    if (!forecast[fDate][fTime]) forecast[fDate][fTime] = {};
+                    forecast[fDate][fTime][item.category] = item.fcstValue;
+                });
+            } catch(e) { console.error("KMA API Error", e); }
+
+            const todayDateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+            const currentHour = String(now.getHours()).padStart(2, '0') + "00";
+            
+            let currentWsd = 5.8;
+            if (forecast[todayDateStr] && forecast[todayDateStr][currentHour]) {
+                currentWsd = parseFloat(forecast[todayDateStr][currentHour]['WSD'] || 5.8);
+            }
+
+            document.getElementById('w-time').innerText = String(now.getHours()).padStart(2, '0') + "시";
+            document.getElementById('w-max').innerText = `${currentWsd.toFixed(1)}m/s`;
+            document.getElementById('w-avg').innerText = `${(currentWsd * 0.7).toFixed(1)}m/s`;
+            document.getElementById('w-note').innerText = pm25Status;
+
+            let html = "";
+            const rows = ['날 씨', '기 온', '강수<br>확률', '바람<br>(m/s)'];
+            const tableData = [];
+
+            for (let i = 0; i < 3; i++) {
+                const fDateStr = `${targetDates[i].getFullYear()}${String(targetDates[i].getMonth() + 1).padStart(2, '0')}${String(targetDates[i].getDate()).padStart(2, '0')}`;
+                for (const tTime of ['0800', '1300']) {
+                    let pop = 0, wsd = 5.0, vec = 0, sky = 1, pty = 0, tmp = "10";
+                    if (forecast[fDateStr] && forecast[fDateStr][tTime]) {
+                        const ft = forecast[fDateStr][tTime];
+                        pop = parseInt(ft['POP'] || 0);
+                        wsd = parseFloat(ft['WSD'] || 0);
+                        vec = parseFloat(ft['VEC'] || 0);
+                        sky = parseInt(ft['SKY'] || 1);
+                        pty = parseInt(ft['PTY'] || 0);
+                        tmp = ft['TMP'] || "0";
+                    }
+                    tableData.push({
+                        icon: getWeatherIcon(sky, pty),
+                        temp: tmp,
+                        pop: pop,
+                        wsd: wsd,
+                        wStr: getWindStrength(wsd),
+                        arrowSVG: getWindDir(vec)
+                    });
+                }
+            }
+
+            html += `<tr><td>${rows[0]}</td>` + tableData.map(d => `<td class="icon-large">${d.icon}</td>`).join('') + `</tr>`;
+            html += `<tr><td>${rows[1]}</td>` + tableData.map((d, i) => `<td class="${i % 2 === 0 ? 'blue-text' : 'red-text'}">${d.temp}°C</td>`).join('') + `</tr>`;
+            html += `<tr><td>${rows[2]}</td>` + tableData.map(d => `<td>${d.pop > 0 ? d.pop + '%' : '-'}</td>`).join('') + `</tr>`;
+            html += `<tr><td>${rows[3]}</td>` + tableData.map(d => `<td class="wind-cell">${d.arrowSVG}<div style="margin-top:4px;">${d.wStr}<br>${parseFloat(d.wsd).toFixed(1)}m/s</div></td>`).join('') + `</tr>`;
+
+            document.getElementById('forecast-body').innerHTML = html;
+        }
+
+        async function captureForecast() {
+            const target = document.getElementById('forecast-section');
+            const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'forecast_screenshot.png';
+            a.click();
+        }
+
+        window.onload = initRegions;
+    </script>
 </body>
+
 </html>
