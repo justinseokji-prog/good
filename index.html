@@ -139,13 +139,15 @@
     <div id="forecast-section" style="background-color: white; padding: 10px;">
         <div style="display: flex; gap: 20px; align-items: baseline; margin-bottom: 10px;">
             <div class="title" style="margin-bottom:0;">일기예보</div>
-            <div id="date-labels" style="font-size: 18px; font-weight: bold;">(26.05.07) &nbsp;&nbsp; (26.05.08) &nbsp;&nbsp; (26.05.09)</div>
         </div>
         
         <table class="forecast-table">
             <thead>
+                <tr id="date-row">
+                    <th rowspan="2" width="10%">시각</th>
+                    <!-- 날짜 삽입 영역 -->
+                </tr>
                 <tr>
-                    <th width="10%">시각</th>
                     <th width="15%">오전</th>
                     <th width="15%">오후</th>
                     <th width="15%">오전</th>
@@ -158,6 +160,7 @@
                 <!-- Data will be inserted here -->
             </tbody>
         </table>
+        <div id="base-time" style="font-size: 14px; color: #555555; margin-top: 5px;">업데이트 기준: -</div>
     </div>
 
     <button class="btn-capture" onclick="captureForecast()">일기예보 스크린샷</button>
@@ -175,7 +178,7 @@
 
     function getWindDir(vec) {
         const arrowIndex = Math.floor(((vec + 180 + 22.5) % 360) / 45);
-        const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+        const arrows = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
         return arrows[arrowIndex];
     }
 
@@ -190,15 +193,28 @@
     async function loadMockData() {
         // Date Setup
         const now = new Date();
-        const datesText = [];
+        const dateRow = document.getElementById('date-row');
         for(let i=0; i<3; i++) {
             const d = new Date(now);
             d.setDate(now.getDate() + i);
-            datesText.push(`(${String(d.getFullYear()).slice(2)}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')})`);
+            const dateStr = `(${String(d.getFullYear()).slice(2)}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')})`;
+            const th = document.createElement('th');
+            th.colSpan = 2;
+            th.innerText = dateStr;
+            
+            // 토요일(5) 파란색, 일요일(0) 빨간색
+            if(d.getDay() === 6) th.style.color = '#2c7bb6';
+            if(d.getDay() === 0) th.style.color = '#d7191c';
+            
+            dateRow.appendChild(th);
         }
-        document.getElementById('date-labels').innerHTML = datesText.join(' &nbsp;&nbsp;&nbsp;&nbsp; ');
         
         document.getElementById('w-time').innerText = String(now.getHours()).padStart(2,'0') + "시";
+        
+        // Base time
+        const yest = new Date(now);
+        yest.setDate(now.getDate() - 1);
+        document.getElementById('base-time').innerText = `업데이트 기준: ${yest.getFullYear()}년 ${yest.getMonth()+1}월 ${yest.getDate()}일 23:00 발표 (오전 08:00, 오후 13:00 예보 기준)`;
 
         // Mock Fetching Logic (You can swap with actual fetch if needed)
         let html = "";
@@ -215,14 +231,14 @@
                 pop: [0, 0, 20, 60][Math.floor(Math.random()*4)],
                 wsd: wsd,
                 wStr: getWindStrength(wsd),
-                arrow: ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][Math.floor(Math.random()*8)]
+                arrow: ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'][Math.floor(Math.random()*8)]
             });
         }
 
         html += `<tr><td>${rows[0]}</td>` + mockData.map(d => `<td class="icon-large">${d.icon}</td>`).join('') + `</tr>`;
         html += `<tr><td>${rows[1]}</td>` + mockData.map((d, i) => `<td class="${i%2===0?'blue-text':'red-text'}">${d.temp}°C</td>`).join('') + `</tr>`;
         html += `<tr><td>${rows[2]}</td>` + mockData.map(d => `<td>${d.pop>0 ? d.pop+'%' : '-'}</td>`).join('') + `</tr>`;
-        html += `<tr><td>${rows[3]}</td>` + mockData.map(d => `<td class="wind-cell">${d.arrow}<br>${d.wStr}<br>${d.wsd}m/s</td>`).join('') + `</tr>`;
+        html += `<tr><td>${rows[3]}</td>` + mockData.map(d => `<td class="wind-cell"><span style="font-size:20px;">${d.arrow}</span><br>${d.wStr}<br>${d.wsd}m/s</td>`).join('') + `</tr>`;
 
         document.getElementById('forecast-body').innerHTML = html;
     }
