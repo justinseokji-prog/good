@@ -121,33 +121,124 @@
             margin-top: 15px;
             margin-bottom: 20px;
         }
+
         .alert-card {
             flex: 1;
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             background-color: #fff;
             border-left: 5px solid #ccc;
         }
-        .alert-card.work-stop { border-left-color: #d7191c; }
-        .alert-card.health { border-left-color: #2c7bb6; }
-        .alert-card.advisory { border-left-color: #8e44ad; }
-        .alert-card h3 { margin-top: 0; font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
-        .status-item { font-size: 14px; margin-bottom: 5px; }
-        .status-danger { color: #d7191c; font-weight: bold; }
-        .status-warning { color: #f59e0b; font-weight: bold; }
-        .status-safe { color: #10b981; font-weight: bold; }
-        .btn-law {
-            background-color: #f0f0f0; border: 1px solid #ccc; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; margin-top: 10px; width: 100%; transition: 0.2s;
+
+        .alert-card.work-stop {
+            border-left-color: #d7191c;
         }
-        .btn-law:hover { background-color: #e0e0e0; }
+
+        .alert-card.health {
+            border-left-color: #2c7bb6;
+        }
+
+        .alert-card.advisory {
+            border-left-color: #8e44ad;
+        }
+
+        .alert-card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-item {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .status-danger {
+            color: #d7191c;
+            font-weight: bold;
+        }
+
+        .status-warning {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+
+        .status-safe {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .btn-law {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .btn-law:hover {
+            background-color: #e0e0e0;
+        }
 
         /* Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
-        .close { color: #aaa; position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close:hover { color: #000; }
-        .law-text { font-size: 14px; line-height: 1.6; color: #333; margin-top: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 4px; border: 1px solid #eee; white-space: pre-line; max-height: 60vh; overflow-y: auto; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .law-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            white-space: pre-line;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 
@@ -214,9 +305,10 @@
             </div>
 
             <div class="alert-card health">
-                <h3><span class="icon">😷</span> 보건(미세먼지) 알림</h3>
+                <h3><span class="icon">😷</span> 보건(황사·미세먼지) 알림</h3>
                 <div class="alert-content">
-                    <div class="status-item" id="alert-dust">초미세먼지: <strong>-</strong></div>
+                    <div class="status-item" id="alert-dust10">미세먼지(PM10): <strong>-</strong></div>
+                    <div class="status-item" id="alert-dust25">초미세먼지(PM2.5): <strong>-</strong></div>
                     <div class="status-item" id="alert-mask">권고사항: <strong>-</strong></div>
                 </div>
                 <button class="btn-law" onclick="showLaw('health')">관련 법령 보기</button>
@@ -301,8 +393,8 @@
                 text: "제37조(악천후 및 강풍 시의 작업 중지)\n① 사업주는 순간풍속이 초당 10미터를 초과하는 경우 타워크레인의 설치·수리·점검 또는 해체 작업을 중지하여야 한다.\n② 사업주는 순간풍속이 초당 15미터를 초과하는 경우 타워크레인의 운전작업을 중지하여야 한다.\n\n제44조(추락의 방지)\n사업주는 높이가 2미터 이상인 장소에서 비, 눈, 그 밖의 기상불안정으로 날씨가 몹시 나빠서(풍속 10m/s 이상, 강우량 1mm/h 이상, 강설량 1cm/h 이상) 근로자가 추락할 위험이 있는 경우에는 해당 작업을 중지하여야 한다.\n\n제383조(작업의 제한)\n사업주는 강풍(10m/s 이상), 폭우(1mm/h 이상), 폭설(1cm/h 이상) 등의 악천후로 인하여 근로자가 위험해질 우려가 있는 경우 철골작업을 중지하여야 한다."
             },
             health: {
-                title: "[산업안전보건기준] 미세먼지 대응 가이드",
-                text: "제617조(작업환경의 관리)\n사업주는 미세먼지(PM10) 및 초미세먼지(PM2.5) 경보 발령 시 옥외작업 근로자의 건강장해를 예방하기 위하여 호흡기 보호구(방진마스크)를 지급하고 착용하도록 하여야 한다.\n\n<미세먼지 주의보/경보 시 사업장 대응 조치>\n1. 주의보 (초미세먼지 75㎍/㎥ 이상 2시간 지속)\n - 옥외 근로자에게 마스크 지급 및 착용 권고\n - 민감군 근로자의 옥외작업 단축 또는 휴식시간 추가 부여\n\n2. 경보 (초미세먼지 150㎍/㎥ 이상 2시간 지속)\n - 호흡용 보호구(마스크) 지급 및 착용 의무화\n - 불가피한 경우 제외 옥외작업 중지 또는 작업시간 단축"
+                title: "[산업안전보건기준] 황사·미세먼지 대응 가이드",
+                text: "제617조(작업환경의 관리)\n사업주는 황사, 미세먼지(PM10) 및 초미세먼지(PM2.5) 주의보·경보 발령 시 옥외작업 근로자의 건강장해를 예방하기 위하여 호흡기 보호구(방진마스크)를 지급하고 착용하도록 하여야 한다.\n\n<황사 및 미세먼지 주의보/경보 시 사업장 대응 조치>\n1. 주의보 발령 시\n (미세먼지 150㎍/㎥ 이상, 초미세먼지 75㎍/㎥ 이상 2시간 지속)\n - 옥외 근로자에게 마스크 지급 및 착용 권고\n - 민감군 근로자의 옥외작업 단축 또는 휴식시간 추가 부여\n\n2. 경보 발령 시\n (미세먼지 300㎍/㎥ 이상, 초미세먼지 150㎍/㎥ 이상 2시간 지속, 황사경보 등)\n - 호흡용 보호구(마스크) 지급 및 착용 의무화\n - 불가피한 경우 제외 옥외작업 중지 또는 작업시간 단축"
             }
         };
 
@@ -316,7 +408,7 @@
             document.getElementById('law-modal').style.display = 'none';
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('law-modal');
             if (event.target == modal) {
                 modal.style.display = "none";
@@ -401,8 +493,10 @@
             }
 
             // Air Quality
-            let pm25Status = "초미세먼지 보통";
+            let pm25Status = "보통";
+            let pm10Status = "보통";
             let pm25Val = 0;
+            let pm10Val = 0;
             let maskRec = "필요시 착용";
             let maskClass = "status-safe";
 
@@ -410,27 +504,41 @@
                 const airUrl = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIR_API_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName=${encodeURIComponent(st)}&dataTerm=DAILY&ver=1.0`;
                 const res = await fetch(airUrl);
                 const data = await res.json();
-                pm25Val = parseInt(data.response.body.items[0].pm25Value);
-                if (pm25Val >= 150) {
-                    pm25Status = "초미세먼지 경보 수준";
-                    maskRec = "마스크 지급 및 착용 의무화 (옥외작업 단축)";
+                pm25Val = parseInt(data.response.body.items[0].pm25Value) || 0;
+                pm10Val = parseInt(data.response.body.items[0].pm10Value) || 0;
+
+                // PM10 (미세먼지 / 황사)
+                if (pm10Val >= 300) pm10Status = "미세먼지/황사 경보 수준";
+                else if (pm10Val >= 150) pm10Status = "주의보 수준";
+                else if (pm10Val >= 81) pm10Status = "나쁨";
+                else if (pm10Val >= 31) pm10Status = "보통";
+                else pm10Status = "좋음";
+
+                // PM2.5 (초미세먼지)
+                if (pm25Val >= 150) pm25Status = "경보 수준";
+                else if (pm25Val >= 75) pm25Status = "주의보 수준";
+                else if (pm25Val >= 35) pm25Status = "나쁨";
+                else if (pm25Val >= 15) pm25Status = "보통";
+                else pm25Status = "좋음";
+
+                // 종합 마스크 착용 권고사항
+                if (pm25Val >= 150 || pm10Val >= 300) {
+                    maskRec = "마스크 지급 및 착용 의무화 (옥외작업 단축/중지)";
                     maskClass = "status-danger";
-                } else if (pm25Val >= 75) {
-                    pm25Status = "초미세먼지 매우나쁨 (주의보)";
-                    maskRec = "마스크 지급 및 착용 권고";
+                } else if (pm25Val >= 75 || pm10Val >= 150) {
+                    maskRec = "마스크 지급 및 착용 권고 (민감군 옥외작업 단축)";
                     maskClass = "status-warning";
-                } else if (pm25Val >= 35) {
-                    pm25Status = "초미세먼지 나쁨";
+                } else if (pm25Val >= 35 || pm10Val >= 81) {
                     maskRec = "민감군 마스크 착용 권고";
                     maskClass = "status-warning";
-                } else if (pm25Val >= 15) {
-                    pm25Status = "초미세먼지 보통";
                 } else {
-                    pm25Status = "초미세먼지 좋음";
+                    maskRec = "마스크 자율 착용";
+                    maskClass = "status-safe";
                 }
             } catch (e) { console.error("Air API Error", e); }
 
-            document.getElementById('alert-dust').innerHTML = `초미세먼지: <strong>${pm25Val}㎍/㎥ (${pm25Status})</strong>`;
+            document.getElementById('alert-dust10').innerHTML = `미세먼지(PM10): <strong>${pm10Val}㎍/㎥ (${pm10Status})</strong>`;
+            document.getElementById('alert-dust25').innerHTML = `초미세먼지(PM2.5): <strong>${pm25Val}㎍/㎥ (${pm25Status})</strong>`;
             document.getElementById('alert-mask').innerHTML = `권고사항: <strong class="${maskClass}">${maskRec}</strong>`;
 
             // Weather API
@@ -516,14 +624,14 @@
 
             let rClass = "status-safe";
             let rText = `${currentRain} (정상)`;
-            if (currentRain !== "강수없음" && parseFloat(currentRain.replace(/[^0-9.]/g, '')) >= 1) { 
-                rClass = "status-danger"; rText = `${currentRain} (고소작업/철골작업 중지)`; 
+            if (currentRain !== "강수없음" && parseFloat(currentRain.replace(/[^0-9.]/g, '')) >= 1) {
+                rClass = "status-danger"; rText = `${currentRain} (고소작업/철골작업 중지)`;
             }
 
             let sClass = "status-safe";
             let sText = `${currentSnow} (정상)`;
-            if (currentSnow !== "적설없음" && parseFloat(currentSnow.replace(/[^0-9.]/g, '')) >= 1) { 
-                sClass = "status-danger"; sText = `${currentSnow} (고소작업/철골작업 중지)`; 
+            if (currentSnow !== "적설없음" && parseFloat(currentSnow.replace(/[^0-9.]/g, '')) >= 1) {
+                sClass = "status-danger"; sText = `${currentSnow} (고소작업/철골작업 중지)`;
             }
 
             document.getElementById('alert-wind').innerHTML = `풍속: <strong class="${wClass}">${wText}</strong>`;
