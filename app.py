@@ -70,7 +70,9 @@ class WeatherApp(QWidget):
 
         self.update_region2()
         self.cb_region1.setCurrentText("서울특별시")
-        self.cb_region2.setCurrentText("종로구")
+        self.cb_region2.setCurrentText("송파구")
+        self.update_region3()
+        self.cb_region3.setCurrentText("장지동")
         
         # 1. 풍속현황
         self.wind_widget = QWidget()
@@ -126,18 +128,7 @@ class WeatherApp(QWidget):
         forecast_title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         title_layout.addWidget(forecast_title)
 
-        title_layout.addSpacing(20)
-        self.date_labels = []
-        for i in range(3):
-            lbl = QLabel("(YY.MM.DD)")
-            lbl.setStyleSheet("font-size: 18px; font-weight: bold;")
-            lbl.setAlignment(Qt.AlignCenter)
-            title_layout.addWidget(lbl)
-            self.date_labels.append(lbl)
-
-        forecast_layout.addLayout(title_layout)
-
-        self.forecast_table = QTableWidget(5, 7)
+        self.forecast_table = QTableWidget(6, 7)
         self.forecast_table.horizontalHeader().setVisible(False)
         self.forecast_table.verticalHeader().setVisible(False)
         self.forecast_table.setFocusPolicy(Qt.NoFocus)
@@ -149,22 +140,36 @@ class WeatherApp(QWidget):
         
         self.forecast_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.forecast_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.forecast_table.setFixedHeight(300)
+        self.forecast_table.setFixedHeight(340)
 
-        fcst_headers = ["시각", "날 씨", "기 온", "강수\n확률", "바람\n(m/s)"]
+        date_header_item = QTableWidgetItem("날짜")
+        date_header_item.setTextAlignment(Qt.AlignCenter)
+        date_header_item.setBackground(QColor("#f4f4f4"))
+        self.forecast_table.setItem(0, 0, date_header_item)
+
+        time_header_item = QTableWidgetItem("시각")
+        time_header_item.setTextAlignment(Qt.AlignCenter)
+        time_header_item.setBackground(QColor("#f4f4f4"))
+        self.forecast_table.setItem(1, 0, time_header_item)
+
+        fcst_headers = ["날 씨", "기 온", "강수\n확률", "바람\n(m/s)"]
         for i, text in enumerate(fcst_headers):
             item = QTableWidgetItem(text)
             item.setTextAlignment(Qt.AlignCenter)
             item.setBackground(QColor("#f4f4f4"))
-            self.forecast_table.setItem(i, 0, item)
+            self.forecast_table.setItem(i+2, 0, item)
 
         for i in range(1, 7):
             item = QTableWidgetItem("오전" if i % 2 != 0 else "오후")
             item.setTextAlignment(Qt.AlignCenter)
             item.setBackground(QColor("#f4f4f4"))
-            self.forecast_table.setItem(0, i, item)
+            self.forecast_table.setItem(1, i, item)
 
         forecast_layout.addWidget(self.forecast_table)
+        
+        self.base_time_label = QLabel("업데이트 기준: -")
+        self.base_time_label.setStyleSheet("font-size: 14px; color: #555555; margin-top: 5px;")
+        forecast_layout.addWidget(self.base_time_label)
         main_layout.addWidget(self.forecast_widget)
 
         # 3. 스크린샷 버튼
@@ -196,12 +201,13 @@ class WeatherApp(QWidget):
     def fetch_data(self):
         r1 = self.cb_region1.currentText()
         r2 = self.cb_region2.currentText()
+        r3 = self.cb_region3.currentText()
         
-        nx, ny, st = 60, 127, "종로구" # Default
+        nx, ny, st = 62, 126, "송파구" # Default
         if r1 in REGIONS and r2 in REGIONS[r1]:
-            nx = REGIONS[r1][r2].get("nx", 60)
-            ny = REGIONS[r1][r2].get("ny", 127)
-            st = REGIONS[r1][r2].get("st", "종로구")
+            nx = REGIONS[r1][r2].get("nx", 62)
+            ny = REGIONS[r1][r2].get("ny", 126)
+            st = REGIONS[r1][r2].get("st", "송파구")
 
         # 1. 미세먼지 (에어코리아)
         pm25_status = "초미세먼지 보통"
@@ -263,17 +269,21 @@ class WeatherApp(QWidget):
             for i in range(3):
                 dt = dates[i]
                 hanja = hanja_days[dt.weekday()]
-                self.date_labels[i].setText(f"({dt.strftime('%y.%m.%d')} {hanja})")
+                
+                date_item = QTableWidgetItem(f"{dt.strftime('%y.%m.%d')} ({hanja})")
+                date_item.setTextAlignment(Qt.AlignCenter)
+                date_item.setBackground(QColor("#f4f4f4"))
                 
                 if dt.weekday() == 5: # 토요일
-                    self.date_labels[i].setStyleSheet("font-size: 18px; font-weight: bold; color: #2c7bb6;")
+                    date_item.setForeground(QColor("#2c7bb6"))
                 elif dt.weekday() == 6: # 일요일
-                    self.date_labels[i].setStyleSheet("font-size: 18px; font-weight: bold; color: #d7191c;")
-                else:
-                    self.date_labels[i].setStyleSheet("font-size: 18px; font-weight: bold; color: black;")
+                    date_item.setForeground(QColor("#d7191c"))
+                
+                self.forecast_table.setItem(0, i*2 + 1, date_item)
+                self.forecast_table.setSpan(0, i*2 + 1, 1, 2)
                 
                 f_date_str = dt.strftime('%Y%m%d')
-                for j, target_time in enumerate(['0800', '1300']):
+                for j, target_time in enumerate(['0800', '1400']):
                     col_idx = i * 2 + j + 1
                     
                     if f_date_str in forecast and target_time in forecast[f_date_str]:
@@ -292,7 +302,7 @@ class WeatherApp(QWidget):
                     sky_item = QTableWidgetItem(icon_str)
                     sky_item.setTextAlignment(Qt.AlignCenter)
                     sky_item.setFont(QFont("Segoe UI Emoji", 20))
-                    self.forecast_table.setItem(1, col_idx, sky_item)
+                    self.forecast_table.setItem(2, col_idx, sky_item)
 
                     # 기온
                     temp_item = QTableWidgetItem(f"{tmp}°C")
@@ -301,12 +311,12 @@ class WeatherApp(QWidget):
                         temp_item.setForeground(QColor("#2c7bb6"))
                     else: # 오후
                         temp_item.setForeground(QColor("#d7191c"))
-                    self.forecast_table.setItem(2, col_idx, temp_item)
+                    self.forecast_table.setItem(3, col_idx, temp_item)
 
                     # 강수확률
                     pop_item = QTableWidgetItem(f"{pop}%" if pop > 0 else "-")
                     pop_item.setTextAlignment(Qt.AlignCenter)
-                    self.forecast_table.setItem(3, col_idx, pop_item)
+                    self.forecast_table.setItem(4, col_idx, pop_item)
 
                     # 바람
                     w_str = get_wind_strength(wsd)
@@ -314,7 +324,8 @@ class WeatherApp(QWidget):
                     wind_text = f"{arrow}\n{w_str}\n{wsd:.1f}m/s"
                     wind_item = QTableWidgetItem(wind_text)
                     wind_item.setTextAlignment(Qt.AlignCenter)
-                    self.forecast_table.setItem(4, col_idx, wind_item)
+                    wind_item.setFont(QFont("Segoe UI Emoji", 15))
+                    self.forecast_table.setItem(5, col_idx, wind_item)
 
         except Exception as e:
             print("KMA API Error:", e)

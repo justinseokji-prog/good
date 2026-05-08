@@ -159,14 +159,13 @@
         <div id="forecast-section" style="background-color: white; padding: 10px;">
             <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
                 <div class="title" style="margin-bottom:0; flex-shrink: 0;">일기예보</div>
-                <div id="date-labels"
-                    style="display: flex; flex: 1; font-size: 18px; font-weight: bold; justify-content: space-around; margin-left: 10%;">
-                    <!-- 날짜가 여기에 들어갑니다 -->
-                </div>
             </div>
 
             <table class="forecast-table">
                 <thead>
+                    <tr id="date-row">
+                        <th width="10%">날짜</th>
+                    </tr>
                     <tr>
                         <th width="10%">시각</th>
                         <th width="15%">오전</th>
@@ -236,7 +235,7 @@
                     cbRegion2.innerHTML += `<option value="${r2}">${r2}</option>`;
                 }
             }
-            cbRegion2.value = "종로구";
+            if (r1 === "서울특별시") cbRegion2.value = "송파구";
             updateRegion3();
         }
 
@@ -250,6 +249,7 @@
                     cbRegion3.innerHTML += `<option value="${r3}">${r3}</option>`;
                 }
             }
+            if (r1 === "서울특별시" && r2 === "송파구") cbRegion3.value = "장지동";
             fetchData();
         }
 
@@ -260,8 +260,8 @@
         async function fetchData() {
             const r1 = cbRegion1.value;
             const r2 = cbRegion2.value;
-            let nx = 60, ny = 127, st = "종로구";
-            
+            let nx = 62, ny = 126, st = "송파구";
+
             if (REGIONS[r1] && REGIONS[r1][r2]) {
                 nx = REGIONS[r1][r2].nx;
                 ny = REGIONS[r1][r2].ny;
@@ -270,23 +270,25 @@
 
             // Date Setup
             const now = new Date();
-            const dateLabels = document.getElementById('date-labels');
-            dateLabels.innerHTML = ''; 
+            const dateRow = document.getElementById('date-row');
+            dateRow.innerHTML = '<th width="10%">날짜</th>';
 
             const hanjaDays = ['日', '月', '火', '水', '木', '金', '土'];
             const targetDates = [];
-            
+
             for (let i = 0; i < 3; i++) {
                 const d = new Date(now);
                 d.setDate(now.getDate() + i);
                 targetDates.push(d);
                 const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} (${hanjaDays[d.getDay()]})`;
-                const div = document.createElement('div');
-                div.innerText = dateStr;
 
-                if (d.getDay() === 6) div.style.color = '#2c7bb6';
-                if (d.getDay() === 0) div.style.color = '#d7191c';
-                dateLabels.appendChild(div);
+                const th = document.createElement('th');
+                th.colSpan = 2;
+                th.innerText = dateStr;
+
+                if (d.getDay() === 6) th.style.color = '#2c7bb6';
+                if (d.getDay() === 0) th.style.color = '#d7191c';
+                dateRow.appendChild(th);
             }
 
             // Air Quality
@@ -300,7 +302,7 @@
                 else if (pm25 >= 35) pm25Status = "초미세먼지 나쁨";
                 else if (pm25 >= 15) pm25Status = "초미세먼지 보통";
                 else pm25Status = "초미세먼지 좋음";
-            } catch(e) { console.error("Air API Error", e); }
+            } catch (e) { console.error("Air API Error", e); }
 
             // Weather API
             const yest = new Date(now);
@@ -308,7 +310,7 @@
             const base_date = `${yest.getFullYear()}${String(yest.getMonth() + 1).padStart(2, '0')}${String(yest.getDate()).padStart(2, '0')}`;
             const base_time = "2300";
 
-            document.getElementById('base-time').innerText = `업데이트 기준: ${yest.getFullYear()}년 ${yest.getMonth() + 1}월 ${yest.getDate()}일 23:00 발표 (오전 08:00, 오후 13:00 예보 기준)`;
+            document.getElementById('base-time').innerText = `업데이트 기준: ${yest.getFullYear()}년 ${yest.getMonth() + 1}월 ${yest.getDate()}일 23:00 발표 (오전 08:00, 오후 14:00 예보 기준)`;
 
             let forecast = {};
             try {
@@ -324,11 +326,11 @@
                     if (!forecast[fDate][fTime]) forecast[fDate][fTime] = {};
                     forecast[fDate][fTime][item.category] = item.fcstValue;
                 });
-            } catch(e) { console.error("KMA API Error", e); }
+            } catch (e) { console.error("KMA API Error", e); }
 
             const todayDateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
             const currentHour = String(now.getHours()).padStart(2, '0') + "00";
-            
+
             let currentWsd = 5.8;
             if (forecast[todayDateStr] && forecast[todayDateStr][currentHour]) {
                 currentWsd = parseFloat(forecast[todayDateStr][currentHour]['WSD'] || 5.8);
@@ -345,7 +347,7 @@
 
             for (let i = 0; i < 3; i++) {
                 const fDateStr = `${targetDates[i].getFullYear()}${String(targetDates[i].getMonth() + 1).padStart(2, '0')}${String(targetDates[i].getDate()).padStart(2, '0')}`;
-                for (const tTime of ['0800', '1300']) {
+                for (const tTime of ['0800', '1400']) {
                     let pop = 0, wsd = 5.0, vec = 0, sky = 1, pty = 0, tmp = "10";
                     if (forecast[fDateStr] && forecast[fDateStr][tTime]) {
                         const ft = forecast[fDateStr][tTime];
