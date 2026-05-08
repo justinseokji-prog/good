@@ -258,11 +258,22 @@ class WeatherApp(QWidget):
 
             # 3일 일기예보
             dates = [now + datetime.timedelta(days=i) for i in range(3)]
+            hanja_days = ['月', '火', '水', '木', '金', '土', '日']
+            
             for i in range(3):
-                self.date_labels[i].setText(f"({dates[i].strftime('%y.%m.%d')})")
+                dt = dates[i]
+                hanja = hanja_days[dt.weekday()]
+                self.date_labels[i].setText(f"({dt.strftime('%y.%m.%d')} {hanja})")
                 
-                f_date_str = dates[i].strftime('%Y%m%d')
-                for j, target_time in enumerate(['0700', '1300']):
+                if dt.weekday() == 5: # 토요일
+                    self.date_labels[i].setStyleSheet("font-size: 18px; font-weight: bold; color: #2c7bb6;")
+                elif dt.weekday() == 6: # 일요일
+                    self.date_labels[i].setStyleSheet("font-size: 18px; font-weight: bold; color: #d7191c;")
+                else:
+                    self.date_labels[i].setStyleSheet("font-size: 18px; font-weight: bold; color: black;")
+                
+                f_date_str = dt.strftime('%Y%m%d')
+                for j, target_time in enumerate(['0800', '1300']):
                     col_idx = i * 2 + j + 1
                     
                     if f_date_str in forecast and target_time in forecast[f_date_str]:
