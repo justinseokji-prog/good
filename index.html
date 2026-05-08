@@ -137,17 +137,17 @@
 
     <!-- 일기예보 영역 (캡처 대상) -->
     <div id="forecast-section" style="background-color: white; padding: 10px;">
-        <div style="display: flex; gap: 20px; align-items: baseline; margin-bottom: 10px;">
-            <div class="title" style="margin-bottom:0;">일기예보</div>
+        <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
+            <div class="title" style="margin-bottom:0; flex-shrink: 0;">일기예보</div>
+            <div id="date-labels" style="display: flex; flex: 1; font-size: 18px; font-weight: bold; justify-content: space-around; margin-left: 10%;">
+                <!-- 날짜가 여기에 들어갑니다 -->
+            </div>
         </div>
         
         <table class="forecast-table">
             <thead>
-                <tr id="date-row">
-                    <th rowspan="2" width="10%">시각</th>
-                    <!-- 날짜 삽입 영역 -->
-                </tr>
                 <tr>
+                    <th width="10%">시각</th>
                     <th width="15%">오전</th>
                     <th width="15%">오후</th>
                     <th width="15%">오전</th>
@@ -177,9 +177,12 @@
     }
 
     function getWindDir(vec) {
-        const arrowIndex = Math.floor(((vec + 180 + 22.5) % 360) / 45);
-        const arrows = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
-        return arrows[arrowIndex];
+        // 나침반 모양의 SVG 화살표 (vec: 풍향 각도)
+        // 기상청 풍향(vec)은 불어오는 방향이므로, 불어가는 방향을 가리키려면 +180도
+        const angle = (vec + 180) % 360;
+        return `<svg viewBox="0 0 24 24" style="width:28px; height:28px; transform: rotate(${angle}deg); display: block; margin: 0 auto;">
+                    <path fill="#000000" d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
+                </svg>`;
     }
 
     function getWeatherIcon(sky, pty) {
@@ -193,20 +196,23 @@
     async function loadMockData() {
         // Date Setup
         const now = new Date();
-        const dateRow = document.getElementById('date-row');
+        const dateLabels = document.getElementById('date-labels');
+        dateLabels.innerHTML = ''; // Clear existing
+        
+        const hanjaDays = ['日', '月', '火', '水', '木', '金', '土'];
+        
         for(let i=0; i<3; i++) {
             const d = new Date(now);
             d.setDate(now.getDate() + i);
-            const dateStr = `(${String(d.getFullYear()).slice(2)}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')})`;
-            const th = document.createElement('th');
-            th.colSpan = 2;
-            th.innerText = dateStr;
+            const dateStr = `${String(d.getFullYear()).slice(2)}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${hanjaDays[d.getDay()]})`;
+            const div = document.createElement('div');
+            div.innerText = dateStr;
             
-            // 토요일(5) 파란색, 일요일(0) 빨간색
-            if(d.getDay() === 6) th.style.color = '#2c7bb6';
-            if(d.getDay() === 0) th.style.color = '#d7191c';
+            // 토요일(6) 파란색, 일요일(0) 빨간색
+            if(d.getDay() === 6) div.style.color = '#2c7bb6';
+            if(d.getDay() === 0) div.style.color = '#d7191c';
             
-            dateRow.appendChild(th);
+            dateLabels.appendChild(div);
         }
         
         document.getElementById('w-time').innerText = String(now.getHours()).padStart(2,'0') + "시";
@@ -225,20 +231,21 @@
         
         for(let i=0; i<6; i++) {
             const wsd = (Math.random() * 5 + 2).toFixed(1);
+            const vec = Math.floor(Math.random() * 360);
             mockData.push({
                 icon: ['☀️', '⛅', '☁️', '☔'][Math.floor(Math.random()*4)],
                 temp: Math.floor(Math.random() * 15 + 10),
                 pop: [0, 0, 20, 60][Math.floor(Math.random()*4)],
                 wsd: wsd,
                 wStr: getWindStrength(wsd),
-                arrow: ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'][Math.floor(Math.random()*8)]
+                arrowSVG: getWindDir(vec)
             });
         }
 
         html += `<tr><td>${rows[0]}</td>` + mockData.map(d => `<td class="icon-large">${d.icon}</td>`).join('') + `</tr>`;
         html += `<tr><td>${rows[1]}</td>` + mockData.map((d, i) => `<td class="${i%2===0?'blue-text':'red-text'}">${d.temp}°C</td>`).join('') + `</tr>`;
         html += `<tr><td>${rows[2]}</td>` + mockData.map(d => `<td>${d.pop>0 ? d.pop+'%' : '-'}</td>`).join('') + `</tr>`;
-        html += `<tr><td>${rows[3]}</td>` + mockData.map(d => `<td class="wind-cell"><span style="font-size:20px;">${d.arrow}</span><br>${d.wStr}<br>${d.wsd}m/s</td>`).join('') + `</tr>`;
+        html += `<tr><td>${rows[3]}</td>` + mockData.map(d => `<td class="wind-cell">${d.arrowSVG}<div style="margin-top:4px;">${d.wStr}<br>${d.wsd}m/s</div></td>`).join('') + `</tr>`;
 
         document.getElementById('forecast-body').innerHTML = html;
     }
