@@ -113,6 +113,41 @@
         .wind-cell {
             line-height: 1.4;
         }
+
+        /* Alert Section */
+        .alert-section {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        .alert-card {
+            flex: 1;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: #fff;
+            border-left: 5px solid #ccc;
+        }
+        .alert-card.work-stop { border-left-color: #d7191c; }
+        .alert-card.health { border-left-color: #2c7bb6; }
+        .alert-card.advisory { border-left-color: #8e44ad; }
+        .alert-card h3 { margin-top: 0; font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .status-item { font-size: 14px; margin-bottom: 5px; }
+        .status-danger { color: #d7191c; font-weight: bold; }
+        .status-warning { color: #f59e0b; font-weight: bold; }
+        .status-safe { color: #10b981; font-weight: bold; }
+        .btn-law {
+            background-color: #f0f0f0; border: 1px solid #ccc; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; margin-top: 10px; width: 100%; transition: 0.2s;
+        }
+        .btn-law:hover { background-color: #e0e0e0; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+        .close { color: #aaa; position: absolute; right: 20px; top: 15px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: #000; }
+        .law-text { font-size: 14px; line-height: 1.6; color: #333; margin-top: 15px; padding: 15px; background-color: #f9f9f9; border-radius: 4px; border: 1px solid #eee; white-space: pre-line; max-height: 60vh; overflow-y: auto; }
     </style>
 </head>
 
@@ -155,6 +190,39 @@
             </table>
         </div>
 
+        <!-- 산업안전보건법 알리미 -->
+        <div class="alert-section" id="alert-section">
+            <div class="alert-card advisory">
+                <h3><span class="icon">🚨</span> 기상특보 (예상) 알림</h3>
+                <div class="alert-content">
+                    <div class="status-item" id="alert-advisory-wind">강풍특보: <strong>-</strong></div>
+                    <div class="status-item" id="alert-advisory-rain">호우특보: <strong>-</strong></div>
+                    <div class="status-item" id="alert-advisory-snow">대설특보: <strong>-</strong></div>
+                    <div class="status-item" id="alert-advisory-heat">폭염특보: <strong>-</strong></div>
+                </div>
+                <button class="btn-law" onclick="showLaw('advisory')">발령 기준 보기</button>
+            </div>
+
+            <div class="alert-card work-stop">
+                <h3><span class="icon">🚧</span> 기상에 따른 작업 중지 알림</h3>
+                <div class="alert-content">
+                    <div class="status-item" id="alert-wind">풍속: <strong>-</strong></div>
+                    <div class="status-item" id="alert-rain">강수량: <strong>-</strong></div>
+                    <div class="status-item" id="alert-snow">적설량: <strong>-</strong></div>
+                </div>
+                <button class="btn-law" onclick="showLaw('work')">관련 법령 보기</button>
+            </div>
+
+            <div class="alert-card health">
+                <h3><span class="icon">😷</span> 보건(미세먼지) 알림</h3>
+                <div class="alert-content">
+                    <div class="status-item" id="alert-dust">초미세먼지: <strong>-</strong></div>
+                    <div class="status-item" id="alert-mask">권고사항: <strong>-</strong></div>
+                </div>
+                <button class="btn-law" onclick="showLaw('health')">관련 법령 보기</button>
+            </div>
+        </div>
+
         <!-- 일기예보 영역 (캡처 대상) -->
         <div id="forecast-section" style="background-color: white; padding: 10px;">
             <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
@@ -186,6 +254,15 @@
         <button class="btn-capture" onclick="captureForecast()">일기예보 스크린샷</button>
     </div>
 
+    <!-- 법령 모달 -->
+    <div id="law-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLaw()">&times;</span>
+            <h2 id="law-title" style="margin-top: 0;">법령 정보</h2>
+            <div id="law-text" class="law-text"></div>
+        </div>
+    </div>
+
     <script src="regions.js"></script>
     <script>
         const KMA_API_KEY = "a50769958abbb8124ed0f48bdd5cb0841bbf509a1a2a5d741f8e35e56dc5f7c1";
@@ -212,6 +289,38 @@
             if (sky == 1) return '☀️';
             if (sky == 3) return '⛅';
             return '☁️';
+        }
+
+        const lawData = {
+            advisory: {
+                title: "[기상청] 기상특보 발령 기준",
+                text: "1. 강풍주의보: 육상에서 풍속 14m/s 이상 또는 순간풍속 20m/s 이상이 예상될 때\n2. 호우주의보: 3시간 강우량이 60mm 이상 예상되거나 12시간 강우량이 110mm 이상 예상될 때\n3. 대설주의보: 24시간 신적설이 5cm 이상 예상될 때\n4. 폭염주의보: 최고기온이 33℃ 이상인 상태가 2일 이상 지속될 것으로 예상될 때\n\n* 본 알림은 예보 데이터를 바탕으로 한 '예상 특보'이며 실제 기상청 특보 발령과 차이가 있을 수 있습니다."
+            },
+            work: {
+                title: "[산업안전보건기준에 관한 규칙] 작업 중지 기준",
+                text: "제37조(악천후 및 강풍 시의 작업 중지)\n① 사업주는 순간풍속이 초당 10미터를 초과하는 경우 타워크레인의 설치·수리·점검 또는 해체 작업을 중지하여야 한다.\n② 사업주는 순간풍속이 초당 15미터를 초과하는 경우 타워크레인의 운전작업을 중지하여야 한다.\n\n제44조(추락의 방지)\n사업주는 높이가 2미터 이상인 장소에서 비, 눈, 그 밖의 기상불안정으로 날씨가 몹시 나빠서(풍속 10m/s 이상, 강우량 1mm/h 이상, 강설량 1cm/h 이상) 근로자가 추락할 위험이 있는 경우에는 해당 작업을 중지하여야 한다.\n\n제383조(작업의 제한)\n사업주는 강풍(10m/s 이상), 폭우(1mm/h 이상), 폭설(1cm/h 이상) 등의 악천후로 인하여 근로자가 위험해질 우려가 있는 경우 철골작업을 중지하여야 한다."
+            },
+            health: {
+                title: "[산업안전보건기준] 미세먼지 대응 가이드",
+                text: "제617조(작업환경의 관리)\n사업주는 미세먼지(PM10) 및 초미세먼지(PM2.5) 경보 발령 시 옥외작업 근로자의 건강장해를 예방하기 위하여 호흡기 보호구(방진마스크)를 지급하고 착용하도록 하여야 한다.\n\n<미세먼지 주의보/경보 시 사업장 대응 조치>\n1. 주의보 (초미세먼지 75㎍/㎥ 이상 2시간 지속)\n - 옥외 근로자에게 마스크 지급 및 착용 권고\n - 민감군 근로자의 옥외작업 단축 또는 휴식시간 추가 부여\n\n2. 경보 (초미세먼지 150㎍/㎥ 이상 2시간 지속)\n - 호흡용 보호구(마스크) 지급 및 착용 의무화\n - 불가피한 경우 제외 옥외작업 중지 또는 작업시간 단축"
+            }
+        };
+
+        function showLaw(type) {
+            document.getElementById('law-title').innerText = lawData[type].title;
+            document.getElementById('law-text').innerText = lawData[type].text;
+            document.getElementById('law-modal').style.display = 'block';
+        }
+
+        function closeLaw() {
+            document.getElementById('law-modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('law-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
         }
 
         const cbRegion1 = document.getElementById('region1');
@@ -293,16 +402,36 @@
 
             // Air Quality
             let pm25Status = "초미세먼지 보통";
+            let pm25Val = 0;
+            let maskRec = "필요시 착용";
+            let maskClass = "status-safe";
+
             try {
                 const airUrl = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty?serviceKey=${AIR_API_KEY}&returnType=json&numOfRows=1&pageNo=1&stationName=${encodeURIComponent(st)}&dataTerm=DAILY&ver=1.0`;
                 const res = await fetch(airUrl);
                 const data = await res.json();
-                const pm25 = parseInt(data.response.body.items[0].pm25Value);
-                if (pm25 >= 75) pm25Status = "초미세먼지 매우나쁨";
-                else if (pm25 >= 35) pm25Status = "초미세먼지 나쁨";
-                else if (pm25 >= 15) pm25Status = "초미세먼지 보통";
-                else pm25Status = "초미세먼지 좋음";
+                pm25Val = parseInt(data.response.body.items[0].pm25Value);
+                if (pm25Val >= 150) {
+                    pm25Status = "초미세먼지 경보 수준";
+                    maskRec = "마스크 지급 및 착용 의무화 (옥외작업 단축)";
+                    maskClass = "status-danger";
+                } else if (pm25Val >= 75) {
+                    pm25Status = "초미세먼지 매우나쁨 (주의보)";
+                    maskRec = "마스크 지급 및 착용 권고";
+                    maskClass = "status-warning";
+                } else if (pm25Val >= 35) {
+                    pm25Status = "초미세먼지 나쁨";
+                    maskRec = "민감군 마스크 착용 권고";
+                    maskClass = "status-warning";
+                } else if (pm25Val >= 15) {
+                    pm25Status = "초미세먼지 보통";
+                } else {
+                    pm25Status = "초미세먼지 좋음";
+                }
             } catch (e) { console.error("Air API Error", e); }
+
+            document.getElementById('alert-dust').innerHTML = `초미세먼지: <strong>${pm25Val}㎍/㎥ (${pm25Status})</strong>`;
+            document.getElementById('alert-mask').innerHTML = `권고사항: <strong class="${maskClass}">${maskRec}</strong>`;
 
             // Weather API
             const yest = new Date(now);
@@ -313,6 +442,11 @@
             document.getElementById('base-time').innerText = `업데이트 기준: ${yest.getFullYear()}년 ${yest.getMonth() + 1}월 ${yest.getDate()}일 23:00 발표 (오전 08:00, 오후 14:00 예보 기준)`;
 
             let forecast = {};
+            let maxWsd = 0;
+            let maxRain = 0;
+            let maxSnow = 0;
+            let maxTmp = 0;
+
             try {
                 const kmaUrl = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey=${KMA_API_KEY}&numOfRows=1000&pageNo=1&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
                 const res = await fetch(kmaUrl);
@@ -325,21 +459,76 @@
                     if (!forecast[fDate]) forecast[fDate] = {};
                     if (!forecast[fDate][fTime]) forecast[fDate][fTime] = {};
                     forecast[fDate][fTime][item.category] = item.fcstValue;
+
+                    if (item.category === 'WSD') {
+                        const val = parseFloat(item.fcstValue);
+                        if (val > maxWsd) maxWsd = val;
+                    }
+                    if (item.category === 'PCP' && item.fcstValue !== '강수없음') {
+                        const val = parseFloat(item.fcstValue.replace(/[^0-9.]/g, ''));
+                        if (val > maxRain) maxRain = val;
+                    }
+                    if (item.category === 'SNO' && item.fcstValue !== '적설없음') {
+                        const val = parseFloat(item.fcstValue.replace(/[^0-9.]/g, ''));
+                        if (val > maxSnow) maxSnow = val;
+                    }
+                    if (item.category === 'TMX') {
+                        const val = parseFloat(item.fcstValue);
+                        if (val > maxTmp) maxTmp = val;
+                    }
                 });
             } catch (e) { console.error("KMA API Error", e); }
+
+            // Special Weather Advisory Check
+            let advWind = maxWsd >= 14 ? '<strong class="status-danger">발령 수준 (14m/s 이상)</strong>' : '<span class="status-safe">안전</span>';
+            let advRain = maxRain >= 30 ? '<strong class="status-danger">발령 수준 (예상)</strong>' : '<span class="status-safe">안전</span>'; // Simple estimation
+            let advSnow = maxSnow >= 5 ? '<strong class="status-danger">발령 수준 (5cm 이상)</strong>' : '<span class="status-safe">안전</span>';
+            let advHeat = maxTmp >= 33 ? '<strong class="status-danger">발령 수준 (33℃ 이상)</strong>' : '<span class="status-safe">안전</span>';
+
+            document.getElementById('alert-advisory-wind').innerHTML = `강풍특보: ${advWind}`;
+            document.getElementById('alert-advisory-rain').innerHTML = `호우특보: ${advRain}`;
+            document.getElementById('alert-advisory-snow').innerHTML = `대설특보: ${advSnow}`;
+            document.getElementById('alert-advisory-heat').innerHTML = `폭염특보: ${advHeat}`;
 
             const todayDateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
             const currentHour = String(now.getHours()).padStart(2, '0') + "00";
 
             let currentWsd = 5.8;
+            let currentRain = "강수없음";
+            let currentSnow = "적설없음";
+
             if (forecast[todayDateStr] && forecast[todayDateStr][currentHour]) {
                 currentWsd = parseFloat(forecast[todayDateStr][currentHour]['WSD'] || 5.8);
+                currentRain = forecast[todayDateStr][currentHour]['PCP'] || "강수없음";
+                currentSnow = forecast[todayDateStr][currentHour]['SNO'] || "적설없음";
             }
 
             document.getElementById('w-time').innerText = String(now.getHours()).padStart(2, '0') + "시";
             document.getElementById('w-max').innerText = `${currentWsd.toFixed(1)}m/s`;
             document.getElementById('w-avg').innerText = `${(currentWsd * 0.7).toFixed(1)}m/s`;
             document.getElementById('w-note').innerText = pm25Status;
+
+            // Update Work Stop Alert
+            let wClass = "status-safe";
+            let wText = `${currentWsd.toFixed(1)}m/s (정상)`;
+            if (currentWsd >= 15) { wClass = "status-danger"; wText = `${currentWsd.toFixed(1)}m/s (타워크레인 운전 중지)`; }
+            else if (currentWsd >= 10) { wClass = "status-danger"; wText = `${currentWsd.toFixed(1)}m/s (고소작업/타워크레인 설치·해체 중지)`; }
+
+            let rClass = "status-safe";
+            let rText = `${currentRain} (정상)`;
+            if (currentRain !== "강수없음" && parseFloat(currentRain.replace(/[^0-9.]/g, '')) >= 1) { 
+                rClass = "status-danger"; rText = `${currentRain} (고소작업/철골작업 중지)`; 
+            }
+
+            let sClass = "status-safe";
+            let sText = `${currentSnow} (정상)`;
+            if (currentSnow !== "적설없음" && parseFloat(currentSnow.replace(/[^0-9.]/g, '')) >= 1) { 
+                sClass = "status-danger"; sText = `${currentSnow} (고소작업/철골작업 중지)`; 
+            }
+
+            document.getElementById('alert-wind').innerHTML = `풍속: <strong class="${wClass}">${wText}</strong>`;
+            document.getElementById('alert-rain').innerHTML = `강수량: <strong class="${rClass}">${rText}</strong>`;
+            document.getElementById('alert-snow').innerHTML = `적설량: <strong class="${sClass}">${sText}</strong>`;
 
             let html = "";
             const rows = ['날 씨', '기 온', '강수<br>확률', '바람<br>(m/s)'];
