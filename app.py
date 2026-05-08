@@ -72,14 +72,14 @@ class WeatherApp(QWidget):
         self.cb_region1.setCurrentText("서울특별시")
         self.cb_region2.setCurrentText("종로구")
         
-        # 1. 오전 풍속현황
+        # 1. 풍속현황
         self.wind_widget = QWidget()
         wind_layout = QVBoxLayout()
         wind_layout.setContentsMargins(0, 0, 0, 0)
         wind_layout.setSpacing(5)
         self.wind_widget.setLayout(wind_layout)
 
-        wind_title = QLabel(" 오전 풍속현황 ")
+        wind_title = QLabel(" 풍속현황 ")
         wind_title.setStyleSheet("font-size: 26px; font-weight: bold; border-left: 14px solid black; border-bottom: 2px solid black; padding-left: 8px;")
         wind_title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         wind_layout.addWidget(wind_title)
