@@ -198,12 +198,12 @@
         }
 
         function getWindDir(vec) {
-            // 나침반 모양의 SVG 화살표 (vec: 풍향 각도)
-            // 기상청 풍향(vec)은 불어오는 방향이므로, 불어가는 방향을 가리키려면 +180도
+            // html2canvas가 SVG와 CSS transform을 제대로 캡처하지 못하는 문제를 해결하기 위해
+            // SVG 내부에 transform을 적용한 후 base64 이미지 데이터로 변환하여 렌더링합니다.
             const angle = (vec + 180) % 360;
-            return `<svg viewBox="0 0 24 24" style="width:28px; height:28px; transform: rotate(${angle}deg); display: block; margin: 0 auto;">
-                    <path fill="#000000" d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" />
-                </svg>`;
+            const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><g transform="rotate(${angle} 12 12)"><path fill="#000000" d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z" /></g></svg>`;
+            const encoded = "data:image/svg+xml;base64," + btoa(svgString);
+            return `<img src="${encoded}" style="width:28px; height:28px; display: block; margin: 0 auto;" />`;
         }
 
         function getWeatherIcon(sky, pty) {
