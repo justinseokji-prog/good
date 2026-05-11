@@ -153,9 +153,15 @@
             gap: 5px;
         }
 
+        .alert-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px 10px;
+        }
+
         .status-item {
             font-size: 14px;
-            margin-bottom: 5px;
+            margin-bottom: 0;
         }
 
         .status-danger {
@@ -322,8 +328,10 @@
         </div>
 
         <!-- 풍속현황 -->
-        <div>
-            <div class="title">풍속현황</div>
+        <div style="background-color: white; padding: 10px;">
+            <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
+                <div class="title" style="margin-bottom:0; flex-shrink: 0;">풍속현황</div>
+            </div>
             <table class="wind-table">
                 <tr>
                     <td width="20%">시간</td>
@@ -345,7 +353,7 @@
         </div>
 
         <!-- 산업안전보건법 알리미 -->
-        <div class="alert-section" id="alert-section">
+        <div class="alert-section" id="alert-section" style="padding: 0 10px;">
             <div class="alert-card advisory">
                 <h3><span class="icon">🚨</span> 기상특보 (예상) 알림</h3>
                 <div class="alert-content">
