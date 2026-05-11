@@ -390,6 +390,17 @@
         </div>
     </div>
 
+    <!-- 이미지 공유 모달 -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content" style="text-align: center; max-width: 800px; width: 90%; margin: 5% auto; padding: 15px;">
+            <span class="close" onclick="closeShareModal()">&times;</span>
+            <h3 style="margin-top: 0; color: #2c7bb6; font-size: 16px;">📸 이미지를 꾹 눌러 카카오톡으로 공유하세요!</h3>
+            <img id="shared-image" style="width: 100%; border: 1px solid #ccc; border-radius: 8px; max-height: 60vh; object-fit: contain;" />
+            <div style="font-size: 13px; color: #555; margin-top: 10px;">※ 위 이미지를 길게 누르면 '이미지 복사' 또는 '공유'가 가능합니다.</div>
+            <button class="btn-capture" style="width: 100%; margin-top: 15px;" onclick="closeShareModal()">닫기</button>
+        </div>
+    </div>
+
     <script src="regions.js"></script>
     <script>
         const KMA_API_KEY = "a50769958abbb8124ed0f48bdd5cb0841bbf509a1a2a5d741f8e35e56dc5f7c1";
@@ -443,10 +454,18 @@
             document.getElementById('law-modal').style.display = 'none';
         }
 
+        function closeShareModal() {
+            document.getElementById('share-modal').style.display = 'none';
+        }
+
         window.onclick = function (event) {
             const modal = document.getElementById('law-modal');
+            const shareModal = document.getElementById('share-modal');
             if (event.target == modal) {
                 modal.style.display = "none";
+            }
+            if (event.target == shareModal) {
+                shareModal.style.display = "none";
             }
         }
 
@@ -721,6 +740,7 @@
                 canvas.toBlob(async (blob) => {
                     const fileName = 'weather_dashboard.png';
                     const file = new File([blob], fileName, { type: 'image/png' });
+                    let shared = false;
 
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
@@ -728,21 +748,25 @@
                                 title: '기상 모니터링 현황',
                                 files: [file]
                             });
+                            shared = true;
                         } catch (err) {
                             console.error('Share failed:', err);
+                            if (err.name === 'AbortError' || err.message.includes('abort')) {
+                                shared = true; // 사용자가 취소한 경우
+                            }
                         }
-                    } else {
+                    }
+
+                    if (!shared) {
                         const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = fileName;
-                        a.click();
-                        URL.revokeObjectURL(url);
+                        document.getElementById('shared-image').src = url;
+                        document.getElementById('share-modal').style.display = 'block';
                     }
                 });
             } catch (err) {
                 btn.style.display = 'block';
                 console.error('Capture failed:', err);
+                alert("캡처 중 오류가 발생했습니다.");
             }
         }
 
