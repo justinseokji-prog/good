@@ -250,31 +250,42 @@
             body {
                 padding: 5px;
             }
-            .forecast-table, .wind-table {
+
+            .forecast-table,
+            .wind-table {
                 font-size: 10px;
             }
-            th, td {
+
+            th,
+            td {
                 padding: 4px 2px;
             }
+
             .icon-large {
                 font-size: 16px;
             }
+
             .title {
                 font-size: 16px;
             }
+
             .alert-card h3 {
                 font-size: 12px;
             }
+
             .status-item {
                 font-size: 11px;
             }
+
             .wind-cell {
                 font-size: 10px;
             }
+
             .btn-capture {
                 font-size: 14px;
                 padding: 8px;
             }
+
             .container {
                 box-sizing: border-box;
             }
@@ -399,10 +410,12 @@
 
     <!-- 이미지 공유 모달 -->
     <div id="share-modal" class="modal">
-        <div class="modal-content" style="text-align: center; max-width: 800px; width: 90%; margin: 5% auto; padding: 15px;">
+        <div class="modal-content"
+            style="text-align: center; max-width: 800px; width: 90%; margin: 5% auto; padding: 15px;">
             <span class="close" onclick="closeShareModal()">&times;</span>
             <h3 style="margin-top: 0; color: #2c7bb6; font-size: 16px;">📸 이미지를 꾹 눌러 카카오톡으로 공유하세요!</h3>
-            <img id="shared-image" style="width: 100%; border: 1px solid #ccc; border-radius: 8px; max-height: 60vh; object-fit: contain;" />
+            <img id="shared-image"
+                style="width: 100%; border: 1px solid #ccc; border-radius: 8px; max-height: 60vh; object-fit: contain;" />
             <div style="font-size: 13px; color: #555; margin-top: 10px;">※ 위 이미지를 길게 누르면 '이미지 복사' 또는 '공유'가 가능합니다.</div>
             <button class="btn-capture" style="width: 100%; margin-top: 15px;" onclick="closeShareModal()">닫기</button>
         </div>
@@ -413,6 +426,8 @@
         const KMA_API_KEY = "a50769958abbb8124ed0f48bdd5cb0841bbf509a1a2a5d741f8e35e56dc5f7c1";
         const AIR_API_KEY = "9f84be7b8da01571f296c24da19af99137e883b3a55546affe686c7b992ae819";
 
+        // --- [1] 기상 데이터 변환 유틸리티 ---
+        // 풍속값을 받아 '약', '약간 강', '강' 한글로 변환
         function getWindStrength(wsd) {
             if (wsd >= 10) return '강';
             if (wsd >= 4) return '약간 강';
@@ -436,6 +451,7 @@
             return '☁️';
         }
 
+        // --- [2] 산업안전보건법 및 기상특보 기준 데이터 ---
         const lawData = {
             advisory: {
                 title: "[기상청] 기상특보 발령 기준",
@@ -451,6 +467,8 @@
             }
         };
 
+        // --- [3] 모달(팝업창) 제어 함수 ---
+        // 특정 타입(advisory, work, health)의 법령 데이터를 모달에 띄움
         function showLaw(type) {
             document.getElementById('law-title').innerText = lawData[type].title;
             document.getElementById('law-text').innerText = lawData[type].text;
@@ -476,6 +494,7 @@
             }
         }
 
+        // --- [4] 지역 선택 드롭다운 이벤트 제어 ---
         const cbRegion1 = document.getElementById('region1');
         const cbRegion2 = document.getElementById('region2');
         const cbRegion3 = document.getElementById('region3');
@@ -519,6 +538,7 @@
         cbRegion2.addEventListener('change', updateRegion3);
         cbRegion3.addEventListener('change', fetchData);
 
+        // --- [5] 핵심 로직: 기상청/에어코리아 API 호출 및 화면 렌더링 ---
         async function fetchData() {
             const r1 = cbRegion1.value;
             const r2 = cbRegion2.value;
@@ -675,7 +695,7 @@
             document.getElementById('w-time').innerText = String(now.getHours()).padStart(2, '0') + "시";
             document.getElementById('w-max').innerText = `${currentWsd.toFixed(1)}m/s`;
             document.getElementById('w-avg').innerText = `${(currentWsd * 0.7).toFixed(1)}m/s`;
-            
+
             let shortPm10 = pm10Status.replace(" 수준", "");
             let shortPm25 = pm25Status.replace(" 수준", "");
             document.getElementById('w-note').innerText = `미세먼지(${shortPm10}) / 초미세먼지(${shortPm25})`;
@@ -738,17 +758,19 @@
             document.getElementById('forecast-body').innerHTML = html;
         }
 
+        // --- [6] 이미지 캡처 및 모바일 공유 기능 ---
+        // html2canvas를 사용하여 화면을 이미지로 변환 후 Web Share API 호출
         async function captureForecast() {
             const target = document.querySelector('.container');
             const btn = document.querySelector('.btn-capture');
             const dropdowns = document.getElementById('dropdowns');
-            
+
             btn.style.display = 'none';
             if (dropdowns) dropdowns.style.display = 'none';
 
             const origWidth = target.style.width;
             const origMaxWidth = target.style.maxWidth;
-            
+
             // 모바일 화면 등에서 비율이 너무 길어지는 것을 방지하기 위해 캡처 시 강제로 600px 너비 적용
             if (window.innerWidth <= 600) {
                 target.style.width = '600px';
@@ -757,7 +779,7 @@
 
             try {
                 const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
-                
+
                 btn.style.display = 'block';
                 if (dropdowns) dropdowns.style.display = 'flex';
                 target.style.width = origWidth;
