@@ -117,6 +117,7 @@
         /* Alert Section */
         .alert-section {
             display: flex;
+            flex-direction: column;
             gap: 15px;
             margin-top: 15px;
             margin-bottom: 20px;
@@ -239,6 +240,40 @@
             max-height: 60vh;
             overflow-y: auto;
         }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .forecast-table, .wind-table {
+                font-size: 11px;
+            }
+            th, td {
+                padding: 6px 2px;
+            }
+            .icon-large {
+                font-size: 20px;
+            }
+            .title {
+                font-size: 18px;
+            }
+            .alert-card h3 {
+                font-size: 15px;
+            }
+            .status-item {
+                font-size: 13px;
+            }
+            .wind-cell {
+                font-size: 11px;
+            }
+            .btn-capture {
+                font-size: 16px;
+                padding: 10px;
+            }
+            .container {
+                box-sizing: border-box;
+            }
+        }
     </style>
 </head>
 
@@ -256,6 +291,34 @@
             <select id="region3">
                 <option>사직동</option>
             </select>
+        </div>
+
+        <!-- 일기예보 영역 (캡처 대상) -->
+        <div id="forecast-section" style="background-color: white; padding: 10px;">
+            <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
+                <div class="title" style="margin-bottom:0; flex-shrink: 0;">일기예보</div>
+            </div>
+
+            <table class="forecast-table">
+                <thead>
+                    <tr id="date-row">
+                        <th width="10%">날짜</th>
+                    </tr>
+                    <tr>
+                        <th width="10%">시각</th>
+                        <th width="15%">오전</th>
+                        <th width="15%">오후</th>
+                        <th width="15%">오전</th>
+                        <th width="15%">오후</th>
+                        <th width="15%">오전</th>
+                        <th width="15%">오후</th>
+                    </tr>
+                </thead>
+                <tbody id="forecast-body">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+            <div id="base-time" style="font-size: 14px; color: #555555; margin-top: 5px;">업데이트 기준: -</div>
         </div>
 
         <!-- 풍속현황 -->
@@ -315,35 +378,7 @@
             </div>
         </div>
 
-        <!-- 일기예보 영역 (캡처 대상) -->
-        <div id="forecast-section" style="background-color: white; padding: 10px;">
-            <div style="display: flex; align-items: baseline; margin-bottom: 10px;">
-                <div class="title" style="margin-bottom:0; flex-shrink: 0;">일기예보</div>
-            </div>
-
-            <table class="forecast-table">
-                <thead>
-                    <tr id="date-row">
-                        <th width="10%">날짜</th>
-                    </tr>
-                    <tr>
-                        <th width="10%">시각</th>
-                        <th width="15%">오전</th>
-                        <th width="15%">오후</th>
-                        <th width="15%">오전</th>
-                        <th width="15%">오후</th>
-                        <th width="15%">오전</th>
-                        <th width="15%">오후</th>
-                    </tr>
-                </thead>
-                <tbody id="forecast-body">
-                    <!-- Data will be inserted here -->
-                </tbody>
-            </table>
-            <div id="base-time" style="font-size: 14px; color: #555555; margin-top: 5px;">업데이트 기준: -</div>
-        </div>
-
-        <button class="btn-capture" onclick="captureForecast()">일기예보 스크린샷</button>
+        <button class="btn-capture" onclick="captureForecast()">전체 화면 공유</button>
     </div>
 
     <!-- 법령 모달 -->
@@ -675,13 +710,40 @@
         }
 
         async function captureForecast() {
-            const target = document.getElementById('forecast-section');
-            const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
-            const url = canvas.toDataURL('image/png');
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'forecast_screenshot.png';
-            a.click();
+            const target = document.querySelector('.container');
+            const btn = document.querySelector('.btn-capture');
+            btn.style.display = 'none';
+
+            try {
+                const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+                btn.style.display = 'block';
+
+                canvas.toBlob(async (blob) => {
+                    const fileName = 'weather_dashboard.png';
+                    const file = new File([blob], fileName, { type: 'image/png' });
+
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                title: '기상 모니터링 현황',
+                                files: [file]
+                            });
+                        } catch (err) {
+                            console.error('Share failed:', err);
+                        }
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }
+                });
+            } catch (err) {
+                btn.style.display = 'block';
+                console.error('Capture failed:', err);
+            }
         }
 
         window.onload = initRegions;
