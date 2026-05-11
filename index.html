@@ -668,7 +668,10 @@
             document.getElementById('w-time').innerText = String(now.getHours()).padStart(2, '0') + "시";
             document.getElementById('w-max').innerText = `${currentWsd.toFixed(1)}m/s`;
             document.getElementById('w-avg').innerText = `${(currentWsd * 0.7).toFixed(1)}m/s`;
-            document.getElementById('w-note').innerText = pm25Status;
+            
+            let shortPm10 = pm10Status.replace(" 수준", "");
+            let shortPm25 = pm25Status.replace(" 수준", "");
+            document.getElementById('w-note').innerText = `미세먼지(${shortPm10}) / 초미세먼지(${shortPm25})`;
 
             // Update Work Stop Alert
             let wClass = "status-safe";
@@ -731,11 +734,27 @@
         async function captureForecast() {
             const target = document.querySelector('.container');
             const btn = document.querySelector('.btn-capture');
+            const dropdowns = document.getElementById('dropdowns');
+            
             btn.style.display = 'none';
+            if (dropdowns) dropdowns.style.display = 'none';
+
+            const origWidth = target.style.width;
+            const origMaxWidth = target.style.maxWidth;
+            
+            // 모바일 화면 등에서 비율이 너무 길어지는 것을 방지하기 위해 캡처 시 강제로 600px 너비 적용
+            if (window.innerWidth <= 600) {
+                target.style.width = '600px';
+                target.style.maxWidth = '600px';
+            }
 
             try {
                 const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2 });
+                
                 btn.style.display = 'block';
+                if (dropdowns) dropdowns.style.display = 'flex';
+                target.style.width = origWidth;
+                target.style.maxWidth = origMaxWidth;
 
                 canvas.toBlob(async (blob) => {
                     const fileName = 'weather_dashboard.png';
